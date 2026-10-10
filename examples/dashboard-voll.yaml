@@ -1,0 +1,4 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 58b0415af2dd8149c52825ee62b976c1be657ddac5b63626f55b502febc99a8b
+type: custom:matter-manager-card
+title: Matter Manager
+default_tab: devices

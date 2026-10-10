@@ -1,0 +1,12 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 1094a1e8172258c9e7c166130c23ed0e15b0c9881f1662bc25ed4cd98864e5c6
+alias: Matter – Batterie niedrig melden
+triggers:
+  - trigger: event
+    event_type: matter_manager_battery_low
+actions:
+  - action: notify.mobile_app_handy
+    data:
+      message: >-
+        {{ trigger.event.data.name }}: Batterie
+        {{ trigger.event.data.battery if trigger.event.data.battery is not none else 'niedrig' }}
+        {{ '%' if trigger.event.data.battery is not none }}

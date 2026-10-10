@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Matter Manager",
+        "description": "Connects the manager to your Matter Server (python-matter-server). The address is taken from the Matter integration when possible.",
+        "data": {
+          "url": "Matter Server address",
+          "low_battery_threshold": "Threshold for “low battery” (%)"
+        },
+        "data_description": {
+          "url": "WebSocket address, e.g. ws://core-matter-server:5580/ws (Matter Server add-on) or ws://192.168.1.10:5580/ws."
+        }
+      },
+      "reconfigure": {
+        "title": "Change Matter Server address",
+        "data": {
+          "url": "Matter Server address"
+        },
+        "data_description": {
+          "url": "WebSocket address, e.g. ws://core-matter-server:5580/ws."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Invalid address (expected ws://… or wss://…).",
+      "cannot_connect": "Cannot connect to the Matter Server. Is it running and is the address correct?",
+      "not_matter_server": "The address responds, but not like a Matter Server."
+    },
+    "abort": {
+      "already_configured": "An entry for this address already exists.",
+      "reconfigure_successful": "The address was changed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matter Manager – settings",
+        "description": "Installed version: **{version}**\n\n{update_info}",
+        "data": {
+          "low_battery_threshold": "Threshold for “low battery” (%)",
+          "critical_battery_threshold": "Threshold for “critical battery” (%)",
+          "fire_events": "Fire Home Assistant events"
+        },
+        "data_description": {
+          "critical_battery_threshold": "Must be less than or equal to the “low battery” threshold.",
+          "fire_events": "Fires e.g. matter_manager_device_offline, _battery_low and _update_available – usable as automation triggers."
+        }
+      }
+    },
+    "error": {
+      "critical_above_low": "The critical threshold must not exceed the “low” threshold."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices": {
+        "name": "Devices"
+      },
+      "offline": {
+        "name": "Offline devices"
+      },
+      "low_battery": {
+        "name": "Devices with low battery"
+      },
+      "critical_battery": {
+        "name": "Devices with critical battery"
+      },
+      "updates_available": {
+        "name": "Firmware updates available"
+      },
+      "fabrics": {
+        "name": "Fabrics"
+      }
+    }
+  },
+  "services": {
+    "commission": {
+      "name": "Add device",
+      "description": "Commissions a Matter device with its setup code (pairing).",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Only needed with several instances."
+        },
+        "code": {
+          "name": "Setup code",
+          "description": "QR text (MT:…) or numeric code (11 or 21 digits)."
+        },
+        "network_only": {
+          "name": "Network only",
+          "description": "Search the existing network only, not via Bluetooth."
+        }
+      }
+    },
+    "check_updates": {
+      "name": "Check for firmware updates",
+      "description": "Checks all OTA-capable devices for updates in the background.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Only needed with several instances."
+        }
+      }
+    }
+  }
+}

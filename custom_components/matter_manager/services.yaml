@@ -1,0 +1,22 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): fe509384e5be6fe11ed0b72b577ae4be48bca571e6e20cc6c9f3c870231b87e4
+commission:
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    code:
+      required: true
+      selector:
+        text:
+    network_only:
+      required: false
+      default: false
+      selector:
+        boolean:
+check_updates:
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:

@@ -1,0 +1,13 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 3e81aa9df1dc78662941b3f98f1889d220974588049f573e884ca19893a0d99b
+type: custom:matter-manager-card
+color_tab_active: "#1f6fff"
+color_success: "#2e9e5b"
+color_warning: "#f5a623"
+color_error: "#e0453a"
+color_info: "#039be5"
+color_icon_devices: "#1f6fff"
+color_icon_battery: "#f5a623"
+color_icon_updates: "#039be5"
+color_icon_fabrics: "#8e44ad"
+color_icon_bindings: "#16a085"
+color_icon_bridge: "#727272"

@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Matter Manager",
+        "description": "Verbindt de manager met je Matter Server (python-matter-server). Het adres wordt, indien mogelijk, overgenomen van de Matter-integratie.",
+        "data": {
+          "url": "Adres van de Matter Server",
+          "low_battery_threshold": "Drempel voor „batterij bijna leeg” (%)"
+        },
+        "data_description": {
+          "url": "WebSocket-adres, bijv. ws://core-matter-server:5580/ws (Matter Server-add-on) of ws://192.168.1.10:5580/ws."
+        }
+      },
+      "reconfigure": {
+        "title": "Adres van de Matter Server wijzigen",
+        "data": {
+          "url": "Adres van de Matter Server"
+        },
+        "data_description": {
+          "url": "WebSocket-adres, bijv. ws://core-matter-server:5580/ws."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Ongeldig adres (verwacht wordt ws://… of wss://…).",
+      "cannot_connect": "Geen verbinding met de Matter Server. Draait hij en klopt het adres?",
+      "not_matter_server": "Het adres antwoordt, maar niet als een Matter Server."
+    },
+    "abort": {
+      "already_configured": "Er bestaat al een item voor dit adres.",
+      "reconfigure_successful": "Het adres is gewijzigd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matter Manager – Instellingen",
+        "description": "Geïnstalleerde versie: **{version}**\n\n{update_info}",
+        "data": {
+          "low_battery_threshold": "Drempel voor „batterij bijna leeg” (%)",
+          "critical_battery_threshold": "Drempel voor „batterij kritiek” (%)",
+          "fire_events": "Home Assistant-gebeurtenissen activeren"
+        },
+        "data_description": {
+          "critical_battery_threshold": "Moet kleiner dan of gelijk aan de drempel voor „batterij bijna leeg” zijn.",
+          "fire_events": "Activeert o.a. matter_manager_device_offline, _battery_low en _update_available – bruikbaar als trigger voor automatiseringen."
+        }
+      }
+    },
+    "error": {
+      "critical_above_low": "De kritieke drempel mag niet hoger zijn dan de drempel voor „bijna leeg”."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices": {
+        "name": "Apparaten"
+      },
+      "offline": {
+        "name": "Offline apparaten"
+      },
+      "low_battery": {
+        "name": "Apparaten met bijna lege batterij"
+      },
+      "critical_battery": {
+        "name": "Apparaten met kritieke batterij"
+      },
+      "updates_available": {
+        "name": "Beschikbare firmware-updates"
+      },
+      "fabrics": {
+        "name": "Fabrics"
+      }
+    }
+  },
+  "services": {
+    "commission": {
+      "name": "Apparaat toevoegen",
+      "description": "Neemt een Matter-apparaat met zijn setupcode in gebruik (koppelen).",
+      "fields": {
+        "entry_id": {
+          "name": "Item-ID",
+          "description": "Alleen nodig bij meerdere instanties."
+        },
+        "code": {
+          "name": "Setupcode",
+          "description": "QR-tekst (MT:…) of numerieke code (11 of 21 cijfers)."
+        },
+        "network_only": {
+          "name": "Alleen netwerk",
+          "description": "Alleen via het bestaande netwerk zoeken, niet via Bluetooth."
+        }
+      }
+    },
+    "check_updates": {
+      "name": "Controleren op firmware-updates",
+      "description": "Controleert alle OTA-geschikte apparaten op de achtergrond op updates.",
+      "fields": {
+        "entry_id": {
+          "name": "Item-ID",
+          "description": "Alleen nodig bij meerdere instanties."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 1ce9a5683e9f053c0ee65497b96b4d81d59e062181e76dbe1bd2d34d692f8126
+# Große, schreibgeschützte Übersicht für ein Wandtablet
+type: custom:matter-manager-card
+title: Matter
+read_only: true
+zoom: 1.3
+show_fabrics: false
+show_bindings: false
+show_bridge: false
+default_tab: battery

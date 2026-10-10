@@ -1,0 +1,16 @@
+{
+  "entity": {
+    "sensor": {
+      "devices": { "default": "mdi:matter" },
+      "offline": { "default": "mdi:lan-disconnect" },
+      "low_battery": { "default": "mdi:battery-alert" },
+      "critical_battery": { "default": "mdi:battery-alert-variant-outline" },
+      "updates_available": { "default": "mdi:update" },
+      "fabrics": { "default": "mdi:home-group" }
+    }
+  },
+  "services": {
+    "commission": { "service": "mdi:plus-network" },
+    "check_updates": { "service": "mdi:update" }
+  }
+}

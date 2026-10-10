@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Matter Manager",
+        "description": "Verbindet den Manager mit deinem Matter Server (python-matter-server). Die Adresse wird, wenn möglich, von der Matter-Integration übernommen.",
+        "data": {
+          "url": "Adresse des Matter Servers",
+          "low_battery_threshold": "Schwelle für „Batterie niedrig“ (%)"
+        },
+        "data_description": {
+          "url": "WebSocket-Adresse, z. B. ws://core-matter-server:5580/ws (Matter-Server-Add-on) oder ws://192.168.1.10:5580/ws."
+        }
+      },
+      "reconfigure": {
+        "title": "Adresse des Matter Servers ändern",
+        "data": {
+          "url": "Adresse des Matter Servers"
+        },
+        "data_description": {
+          "url": "WebSocket-Adresse, z. B. ws://core-matter-server:5580/ws."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Ungültige Adresse (erwartet wird ws://… oder wss://…).",
+      "cannot_connect": "Keine Verbindung zum Matter Server. Läuft er und ist die Adresse korrekt?",
+      "not_matter_server": "Die Adresse antwortet, aber nicht wie ein Matter Server."
+    },
+    "abort": {
+      "already_configured": "Für diese Adresse existiert bereits ein Eintrag.",
+      "reconfigure_successful": "Die Adresse wurde geändert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matter Manager – Einstellungen",
+        "description": "Installierte Version: **{version}**\n\n{update_info}",
+        "data": {
+          "low_battery_threshold": "Schwelle für „Batterie niedrig“ (%)",
+          "critical_battery_threshold": "Schwelle für „Batterie kritisch“ (%)",
+          "fire_events": "Home-Assistant-Ereignisse auslösen"
+        },
+        "data_description": {
+          "critical_battery_threshold": "Muss kleiner oder gleich der Schwelle für „Batterie niedrig“ sein.",
+          "fire_events": "Löst z. B. matter_manager_device_offline, _battery_low und _update_available aus – nutzbar als Automations-Auslöser."
+        }
+      }
+    },
+    "error": {
+      "critical_above_low": "Die kritische Schwelle darf nicht über der Schwelle für „niedrig“ liegen."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices": {
+        "name": "Geräte"
+      },
+      "offline": {
+        "name": "Offline-Geräte"
+      },
+      "low_battery": {
+        "name": "Geräte mit niedriger Batterie"
+      },
+      "critical_battery": {
+        "name": "Geräte mit kritischer Batterie"
+      },
+      "updates_available": {
+        "name": "Verfügbare Firmware-Updates"
+      },
+      "fabrics": {
+        "name": "Fabrics"
+      }
+    }
+  },
+  "services": {
+    "commission": {
+      "name": "Gerät hinzufügen",
+      "description": "Nimmt ein Matter-Gerät mit seinem Setup-Code in Betrieb (Pairing).",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrags-ID",
+          "description": "Nur bei mehreren Instanzen nötig."
+        },
+        "code": {
+          "name": "Setup-Code",
+          "description": "QR-Text (MT:…) oder numerischer Code (11 oder 21 Ziffern)."
+        },
+        "network_only": {
+          "name": "Nur Netzwerk",
+          "description": "Nur über das vorhandene Netzwerk suchen, nicht per Bluetooth."
+        }
+      }
+    },
+    "check_updates": {
+      "name": "Auf Firmware-Updates prüfen",
+      "description": "Prüft alle OTA-fähigen Geräte im Hintergrund auf Updates.",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrags-ID",
+          "description": "Nur bei mehreren Instanzen nötig."
+        }
+      }
+    }
+  }
+}
