@@ -1,4 +1,4 @@
-[🇩🇪 Deutsch](README.md) · 🇬🇧 English · [🇳🇱 Nederlands](README.nl.md)
+[🇩🇪 Deutsch](README.md) · 🇬🇧 English · [🇳🇱 Nederlands](README.nl.md) · [🇫🇷 Français](README.fr.md)
 
 # Matter Manager for Home Assistant
 
@@ -45,7 +45,7 @@ More points:
 - **Two-click confirmation** instead of a browser dialog for risky actions (remove, update, reconnect, unbind).
 - **Read only:** `read_only: true` hides all controls that change something (wall tablets).
 - **Zoom:** `zoom` scales the whole card.
-- **Languages:** German, English and Dutch (integration and card, following the Home Assistant language).
+- **Languages:** German, English, Dutch and French (integration and card, following the Home Assistant language).
 - **Diagnostics download** with anonymized names and IDs.
 
 ## Requirements

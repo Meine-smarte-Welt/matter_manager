@@ -1,4 +1,4 @@
-🇩🇪 Deutsch · [🇬🇧 English](README.en.md) · [🇳🇱 Nederlands](README.nl.md)
+🇩🇪 Deutsch · [🇬🇧 English](README.en.md) · [🇳🇱 Nederlands](README.nl.md) · [🇫🇷 Français](README.fr.md)
 
 # Matter Manager für Home Assistant
 
@@ -45,7 +45,7 @@ Weitere Punkte:
 - **Zwei-Klick-Bestätigung** statt Browser-Dialog bei riskanten Aktionen (Entfernen, Update, Neu verbinden, Lösen).
 - **Nur lesen:** `read_only: true` blendet alle Bedienelemente zum Ändern aus (Wandtablets).
 - **Zoom:** `zoom` skaliert die ganze Karte.
-- **Sprachen:** Deutsch, Englisch und Niederländisch (Integration und Karte, nach Home-Assistant-Sprache).
+- **Sprachen:** Deutsch, Englisch, Niederländisch und Französisch (Integration und Karte, nach Home-Assistant-Sprache).
 - **Diagnose-Download** mit anonymisierten Namen und IDs.
 
 ## Voraussetzungen
@@ -214,6 +214,7 @@ JSON-Dateien haben keine Kommentare. Ihre SHA-256-Hashes (über die komplette Da
 | `custom_components/matter_manager/translations/de.json` | `aa57065c0ddee70f88cf5cab0b42d4a01f0f72fc9faab7571e9c1493562a4f73` |
 | `custom_components/matter_manager/translations/en.json` | `9c457f38c2a7650a00908d6601906a34655facc5540e2ba516dfc2c0a047c3f6` |
 | `custom_components/matter_manager/translations/nl.json` | `3d9ee90c1cac32673507fc2a6a9f74f6bc585e91359d8f4a7b1b6d36ca2e2218` |
+| `custom_components/matter_manager/translations/fr.json` | `716c55a3e6d3eebb67ebcd9efa56483b4dfe12b92fe32f6050f800ef680469d5` |
 
 ## Lizenz
 

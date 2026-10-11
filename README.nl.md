@@ -1,4 +1,4 @@
-[🇩🇪 Deutsch](README.md) · [🇬🇧 English](README.en.md) · 🇳🇱 Nederlands
+[🇩🇪 Deutsch](README.md) · [🇬🇧 English](README.en.md) · 🇳🇱 Nederlands · [🇫🇷 Français](README.fr.md)
 
 # Matter Manager voor Home Assistant
 
@@ -45,7 +45,7 @@ Meer punten:
 - **Bevestiging met twee klikken** in plaats van een browserdialoog bij riskante acties (verwijderen, update, opnieuw verbinden, loskoppelen).
 - **Alleen-lezen:** `read_only: true` verbergt alle bedieningselementen die iets wijzigen (wandtablets).
 - **Zoom:** `zoom` schaalt de hele kaart.
-- **Talen:** Duits, Engels en Nederlands (integratie en kaart, volgens de taal van Home Assistant).
+- **Talen:** Duits, Engels, Nederlands en Frans (integratie en kaart, volgens de taal van Home Assistant).
 - **Diagnosedownload** met geanonimiseerde namen en ID's.
 
 ## Vereisten
