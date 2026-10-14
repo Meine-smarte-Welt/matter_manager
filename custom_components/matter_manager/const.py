@@ -1,10 +1,10 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 2467893ffd7f23976bb18a9aa79a8476bed9f09249033f4d8ced8a5d10f5087a
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d21a9fa91c021d047ec3be8f039f774d7b2edb94d9352b41e533819e95718925
 """Konstanten für Matter Manager."""
 
 from datetime import timedelta
 
 DOMAIN = "matter_manager"
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 
 CONF_URL = "url"
 CONF_LOW_BATTERY = "low_battery_threshold"

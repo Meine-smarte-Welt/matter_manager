@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): f9e616bd925c7cfcf921e5eba130083d7dc72d41f2dc1ebd87181aee7b86374c
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 5adeb14a32074e1f1f39e0d916b1569d0cb7a1f6c142e923040535a318db1e49
 """Diagnose-Download (Namen, Seriennummern und Fabric-Bezeichnungen werden weggelassen)."""
 
 from __future__ import annotations
@@ -38,6 +38,7 @@ async def async_get_config_entry_diagnostics(
             "fabrics": d["fabrics_count"],
             "ota": {"capable": d["ota"]["capable"], "state": d["ota"]["state"]},
             "bindings": len(d["bindings"]),
+            "functions": len(d["functions"]),
         }
         for d in data["devices"]
     ]

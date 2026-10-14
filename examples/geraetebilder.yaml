@@ -1,0 +1,10 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 401693864020b6bc153e36923a91ea3e80df8e2061843a0367f326bd7e39e000
+# Gerätebilder: eigener Bildordner und feste Zuordnung einzelner Geräte
+type: custom:matter-manager-card
+show_images: true
+# Dateiname im Ordner: Teilenummer oder Produktname + .png
+image_base: /local/matter-bilder/
+# Zuordnung nach Gerätename, "Hersteller Modell", Modell oder ID (Groß-/Kleinschreibung egal)
+device_images:
+  Wohnzimmer Lampe: /local/matter-bilder/lampe.png
+  Eve Door & Window: https://example.org/bilder/eve-door.png

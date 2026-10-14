@@ -24,23 +24,26 @@ Manage Matter devices without leaving Home Assistant: devices, batteries, firmwa
 
 ## Features
 
-The card has six categories in an icon bar (icons only below roughly 480 px card width). Each category can be shown or hidden individually.
+The card has seven categories in an icon bar (icons only below roughly 480 px card width). Each category can be shown or hidden individually.
 
 | Category | What it does |
 |---|---|
 | **Devices** | List with reachability, model, vendor, signal strength (dBm), battery, “last seen”; statistic chips as filters (offline / low battery / updates); search; sorting; **filters** (status, power, signal, network, firmware, last seen, ecosystems, manufacturer, device name, device class) and **grouping** by manufacturer, device name or device class; “Add device” |
 | **Battery** | Battery devices, lowest level first; colors by low and critical threshold; devices without a percentage show the charge state (OK/warning/critical) |
 | **Updates** | Installed vs. available firmware; “Check all” and “Install all one by one” as a background job with progress and cancel |
+| **Functions** | Expose functions of all devices: **switches** (on/off) can be toggled directly in the card, plus values such as brightness, color temperature, temperature, humidity, pressure, illuminance (lx), occupancy, lock and cover state (read-only); filter (All / Switchable / On); a switch stays locked until the device reports back (no double click); not switchable on errors or for offline devices |
 | **Fabrics** | Ecosystems (Apple Home, Google Home, Alexa, …) the devices are connected to; remove the connection to a foreign ecosystem |
 | **Bindings** | Overview of all device links; unbind; re-bind in the device popup |
 | **Server** (gear) | **App version** (integration and card, with a colored notice for a new version), Matter Server status, add device (setup code), fabric label, reconnect, event log |
 
-**Device popup** (tap a row) with accordion sections: Information · Rename (with a list of the affected HA entities) · Firmware · Bindings · Fabrics (incl. sharing with another ecosystem) · Diagnostics (check reachability, re-interview) · Remove.
+**Device popup** (tap a row) with accordion sections: Information · Rename (with a list of the affected HA entities) · Firmware · Bindings · Functions · Entities (copy to the clipboard for automations and scripts) · Fabrics (incl. sharing with another ecosystem) · Diagnostics (check reachability, re-interview) · Remove.
 
 More points:
 
 - **Matter equivalents instead of Zigbee terms:** availability comes from the Matter Server, signal strength is an RSSI value in dBm (Wi-Fi or Thread), groups are replaced by fabrics, the “coordinator” is the Matter Server.
-- **Devices behind bridges** (e.g. a Hue bridge) appear on their own but are read-only: only the name in Home Assistant can be changed.
+- **Devices behind bridges** (e.g. a Hue bridge) appear on their own; renaming and toggling functions are possible, firmware, bindings and fabrics stay locked.
+- **Device images:** A small device image appears next to each row and in the popup. Matter provides no product images, so the card tries image names built from part number, product name and model one after another against the image library of the Zigbee2MQTT project (`https://www.zigbee2mqtt.io/images/devices/<model>.png`). If everything fails, the icon by device type is shown. **Privacy:** your browser (not Home Assistant) requests images from `zigbee2mqtt.io` and thereby transmits the devices' part number or product name. With `show_images: false` nothing is requested; `image_base` points to your own server (e.g. `/local/devices`), `device_images` assigns custom image URLs to individual devices (YAML only).
+- **Functions and clipboard:** Switches are only toggled via the Matter commands "On"/"Off" of the OnOff cluster. Locks deliberately cannot be operated. In the popup, the button per entity (or "Copy all") copies the entity ID to the clipboard; if access is blocked (e.g. without HTTPS), a text field for manual copying appears.
 - **Cache:** “last seen” and the update state survive a restart.
 - **Two-click confirmation** instead of a browser dialog for risky actions (remove, update, reconnect, unbind).
 - **Read only:** `read_only: true` hides all controls that change something (wall tablets).
@@ -78,8 +81,11 @@ show_battery: true
 show_updates: true
 show_fabrics: true
 show_bindings: true
+show_functions: true
+show_images: true             # device images (source: see "Device images")
+# image_base: /local/devices  # own image folder instead of zigbee2mqtt.io
 show_bridge: true             # category "Server"
-default_tab: devices          # devices | battery | updates | fabrics | bindings | bridge
+default_tab: devices          # devices | battery | updates | functions | fabrics | bindings | bridge
 max_rows: 0                   # 0 = all, otherwise "show more"
 zoom: 1
 show_stats: true
@@ -114,7 +120,7 @@ In the editor under **Farben** (colors) or via `color_*` keys. Each value may be
 | `color_info` | Update available (firmware, new app version) |
 | `color_row_icon` | All list icons (overrides the category colors) |
 | `color_live_banner` | Banner background (add device, firmware job) |
-| `color_icon_devices`, `_battery`, `_updates`, `_fabrics`, `_bindings`, `_bridge` | Icon of the category – colors the tab icon and row icons |
+| `color_icon_devices`, `_battery`, `_updates`, `_functions`, `_fabrics`, `_bindings`, `_bridge` | Icon of the category – colors the tab icon and row icons |
 
 If `color_row_icon` is set, this uniform color wins.
 
@@ -172,15 +178,16 @@ Under **Configure** (showing the installed version): “low battery” threshold
 
 ## Security
 
-All write actions (rename, remove, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes.
+All write actions (rename, remove, toggling functions, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes. Switching is limited to on/off of the OnOff cluster, the value must be a boolean and the device must be reachable; locks and all other functions are read-only. Image addresses from `device_images` and `image_base` are checked against unsafe schemes (e.g. `javascript:`).
 
 ## Known limitations
 
-- **Version 1.0.2 has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
+- **Version 1.0.3 has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
 - **Manufacturer and device name** come from the device's basic data (vendor name and product name). If the product name starts with the manufacturer name, it is removed; if the manufacturer is missing, it is only detected when another device reports the same manufacturer name. Without these values the device appears under “Unknown”. The device class comes from the endpoints' device types; devices with an unknown type land in “Other”. Both were only checked with simulated data.
 - **Writing Matter commands are untested:** the format of `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` and `remove_matter_fabric` may differ depending on the Matter Server version. In that case the function has no effect or reports an error – read-only functions are not affected.
 - **No groups:** Zigbee groups have no direct Matter equivalent for this interface; the category is called “Fabrics” instead.
-- **No device images:** Matter does not provide product images, icons by device type are shown.
+- **Device images:** The hit rate of the image library for Matter devices is unknown; the image names are candidates, not a guaranteed match. If an image is missing, the icon is shown. Fetching from `zigbee2mqtt.io` could not be verified in the development environment.
+- **Functions:** Reading the function attributes and the switch command (`device_command` On/Off) were only tested with simulated data – **untested on real hardware**. Sensor values refresh about once a minute; devices behind bridges can now be switched if they report OnOff. With `read_only: true`, switches and the entity list disappear.
 - Signal strength exists only for Wi-Fi and Thread devices (for Thread: best neighbor). Bridge and Ethernet devices have no value.
 - Battery devices (Thread, “sleepy”) often pick up updates and bindings only after hours or after a button press.
 - The entity preview when renaming finds devices via the identifiers of the Matter integration and can stay empty in special cases.
@@ -200,6 +207,7 @@ All write actions (rename, remove, firmware, bindings, fabrics, add device, reco
 
 | Version | Change |
 |---|---|
+| **1.0.3** | New: small device images (candidates from the Zigbee2MQTT image library, can be disabled, own image folder possible), category **Functions** with switchable on/off switches and measured values, device popup sections Functions and Entities with copy to clipboard. New keys `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Tested only with simulated data and in a headless browser, not on real hardware |
 | **1.0.2** | Card resource path corrected: `/matter_manager/matter-manager-card.js` instead of `/matter_manager_files/…` (existing entries are migrated automatically). Manufacturer and device name are read from the type designation. New: filters and grouping (manufacturer, device name, device class) as in the Zigbee2MQTT Manager. French (pull request #1) |
 | 1.0.1 | First release on GitHub: new icon and logo, Dutch (integration and card), README in three languages |
 | 1.0.0 | Internal state before the release |

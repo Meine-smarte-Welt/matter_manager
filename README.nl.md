@@ -24,23 +24,26 @@ Beheer Matter-apparaten zonder Home Assistant te verlaten: apparaten, batterijen
 
 ## Functies
 
-De kaart heeft zes categorieën in een pictogrammenbalk (onder ca. 480 px kaartbreedte alleen pictogrammen). Elke categorie kan afzonderlijk worden getoond of verborgen.
+De kaart heeft zeven categorieën in een pictogrammenbalk (onder ca. 480 px kaartbreedte alleen pictogrammen). Elke categorie kan afzonderlijk worden getoond of verborgen.
 
 | Categorie | Wat het kan |
 |---|---|
 | **Apparaten** | Lijst met bereikbaarheid, model, fabrikant, signaalsterkte (dBm), batterij, „laatst gezien”; statistiekchips als filter (offline / batterij bijna leeg / updates); zoeken; sorteren; **filters** (status, voeding, signaal, netwerk, firmware, laatst gezien, ecosystemen, fabrikant, apparaatnaam, apparaatklasse) en **groeperen** op fabrikant, apparaatnaam of apparaatklasse; „Apparaat toevoegen” |
 | **Batterij** | Apparaten op batterij, laagste stand eerst; kleuren volgens de drempels voor bijna leeg en kritiek; apparaten zonder percentage tonen de laadstatus (OK/waarschuwing/kritiek) |
 | **Updates** | Geïnstalleerde vs. beschikbare firmware; „Alles controleren” en „Alles na elkaar installeren” als achtergrondtaak met voortgang en annuleren |
+| **Functies** | Expose-functies van alle apparaten: **schakelaars** (aan/uit) direct in de kaart te bedienen, plus waarden zoals helderheid, kleurtemperatuur, temperatuur, luchtvochtigheid, druk, verlichtingssterkte (lx), aanwezigheid, slot- en rolluikstatus (alleen-lezen); filter (Alle / Schakelbaar / Aan); een schakelaar blijft vergrendeld tot het apparaat terugmeldt (geen dubbelklik); bij fouten of offline-apparaten niet schakelbaar |
 | **Fabrics** | Ecosystemen (Apple Home, Google Home, Alexa, …) waarmee de apparaten verbonden zijn; verbinding met een extern ecosysteem verbreken |
 | **Bindings** | Overzicht van alle apparaatkoppelingen; loskoppelen; opnieuw koppelen in de apparaatpopup |
 | **Server** (tandwiel) | **App-versie** (integratie en kaart, met een gekleurde melding bij een nieuwe versie), status van de Matter Server, apparaat toevoegen (setupcode), fabric-naam, opnieuw verbinden, gebeurtenissenlogboek |
 
-**Apparaatpopup** (tik op een rij) met accordeonsecties: Informatie · Hernoemen (met lijst van de betrokken HA-entiteiten) · Firmware · Bindings · Fabrics (incl. delen met een ander ecosysteem) · Diagnose (bereikbaarheid controleren, opnieuw uitlezen) · Verwijderen.
+**Apparaatpopup** (tik op een rij) met accordeonsecties: Informatie · Hernoemen (met lijst van de betrokken HA-entiteiten) · Firmware · Bindings · Functies · Entiteiten (kopiëren naar het klembord voor automatiseringen en scripts) · Fabrics (incl. delen met een ander ecosysteem) · Diagnose (bereikbaarheid controleren, opnieuw uitlezen) · Verwijderen.
 
 Meer punten:
 
 - **Matter-equivalenten in plaats van Zigbee-termen:** beschikbaarheid komt van de Matter Server, de signaalsterkte is een RSSI-waarde in dBm (wifi of Thread), groepen worden vervangen door fabrics, de „coördinator” is de Matter Server.
-- **Apparaten achter bridges** (bijv. een Hue-bridge) verschijnen afzonderlijk, maar zijn alleen-lezen: alleen de naam in Home Assistant kan worden gewijzigd.
+- **Apparaten achter bridges** (bijv. een Hue-bridge) verschijnen afzonderlijk; hernoemen en functies schakelen is mogelijk, firmware, bindings en fabrics blijven vergrendeld.
+- **Apparaatafbeeldingen:** Naast elke rij en in de popup staat een kleine afbeelding van het apparaat. Matter levert geen productafbeeldingen; de kaart probeert daarom achtereenvolgens afbeeldingsnamen uit onderdeelnummer, productnaam en model tegen de afbeeldingenbibliotheek van het Zigbee2MQTT-project (`https://www.zigbee2mqtt.io/images/devices/<model>.png`). Lukt niets, dan verschijnt het pictogram per apparaattype. **Privacy:** je browser (niet Home Assistant) vraagt afbeeldingen op bij `zigbee2mqtt.io` en verstuurt daarbij het onderdeelnummer of de productnaam van de apparaten. Met `show_images: false` wordt niets opgevraagd; `image_base` wijst naar een eigen server (bijv. `/local/apparaten`), `device_images` wijst aan afzonderlijke apparaten eigen afbeeldings-URL's toe (alleen YAML).
+- **Functies en klembord:** Schakelaars worden alleen geschakeld via de Matter-commando's „On”/„Off” van het OnOff-cluster. Sloten kunnen bewust niet worden bediend. In de popup kopieert de knop per entiteit (of „Alles kopiëren”) de entiteits-ID naar het klembord; is toegang geblokkeerd (bijv. zonder HTTPS), dan verschijnt een tekstveld om handmatig te kopiëren.
 - **Cache:** „laatst gezien” en de updatestatus blijven na een herstart bewaard.
 - **Bevestiging met twee klikken** in plaats van een browserdialoog bij riskante acties (verwijderen, update, opnieuw verbinden, loskoppelen).
 - **Alleen-lezen:** `read_only: true` verbergt alle bedieningselementen die iets wijzigen (wandtablets).
@@ -78,8 +81,11 @@ show_battery: true
 show_updates: true
 show_fabrics: true
 show_bindings: true
+show_functions: true
+show_images: true             # apparaatafbeeldingen (bron: zie „Apparaatafbeeldingen”)
+# image_base: /local/apparaten  # eigen afbeeldingenmap i.p.v. zigbee2mqtt.io
 show_bridge: true             # categorie „Server”
-default_tab: devices          # devices | battery | updates | fabrics | bindings | bridge
+default_tab: devices          # devices | battery | updates | functions | fabrics | bindings | bridge
 max_rows: 0                   # 0 = alle, anders „meer tonen”
 zoom: 1
 show_stats: true
@@ -114,7 +120,7 @@ In de editor onder **Farben** (kleuren) of via `color_*`-sleutels. Elke waarde m
 | `color_info` | Update beschikbaar (firmware, nieuwe app-versie) |
 | `color_row_icon` | Alle lijstpictogrammen (overschrijft de categoriekleuren) |
 | `color_live_banner` | Bannerachtergrond (apparaat toevoegen, firmwaretaak) |
-| `color_icon_devices`, `_battery`, `_updates`, `_fabrics`, `_bindings`, `_bridge` | Pictogram van de categorie – kleurt het tabpictogram en de rijpictogrammen |
+| `color_icon_devices`, `_battery`, `_updates`, `_functions`, `_fabrics`, `_bindings`, `_bridge` | Pictogram van de categorie – kleurt het tabpictogram en de rijpictogrammen |
 
 Is `color_row_icon` ingesteld, dan wint deze uniforme kleur.
 
@@ -172,15 +178,16 @@ Onder **Configureren** (met weergave van de geïnstalleerde versie): drempel „
 
 ## Beveiliging
 
-Alle schrijfacties (hernoemen, verwijderen, firmware, bindings, fabrics, apparaat toevoegen, opnieuw verbinden, versiecontrole) en het laden van de apparaatdetails zijn via WebSocket beperkt tot **beheerders**. Invoer wordt door de backend gecontroleerd (formaat van de setupcode, naamlengte, bekende apparaten, eigen fabric kan niet worden verwijderd). Bij het aanmaken van een binding wordt alleen een toegangsitem (ACL) op het doelapparaat toegevoegd als daar al een beheerdersitem via CASE bestaat, zodat Home Assistant nooit de toegang verliest. De kaart maskeert alle teksten; kleurwaarden lopen door een allowlist. De getoonde setupcode van een open koppelvenster is alleen zichtbaar voor beheerders en vijf minuten geldig.
+Alle schrijfacties (hernoemen, verwijderen, functies schakelen, firmware, bindings, fabrics, apparaat toevoegen, opnieuw verbinden, versiecontrole) en het laden van de apparaatdetails zijn via WebSocket beperkt tot **beheerders**. Invoer wordt door de backend gecontroleerd (formaat van de setupcode, naamlengte, bekende apparaten, eigen fabric kan niet worden verwijderd). Bij het aanmaken van een binding wordt alleen een toegangsitem (ACL) op het doelapparaat toegevoegd als daar al een beheerdersitem via CASE bestaat, zodat Home Assistant nooit de toegang verliest. De kaart maskeert alle teksten; kleurwaarden lopen door een allowlist. De getoonde setupcode van een open koppelvenster is alleen zichtbaar voor beheerders en vijf minuten geldig. Schakelen is beperkt tot aan/uit van het OnOff-cluster, de waarde moet een booleaanse waarde zijn en het apparaat moet bereikbaar zijn; sloten en alle andere functies zijn alleen-lezen. Afbeeldingsadressen uit `device_images` en `image_base` worden gecontroleerd op onveilige schema's (bijv. `javascript:`).
 
 ## Bekende beperkingen
 
-- **Versie 1.0.2 is niet op echte hardware getest.** Ontwikkeld is tegen de gedocumenteerde WebSocket-interface van python-matter-server en tegen een gesimuleerde server.
+- **Versie 1.0.3 is niet op echte hardware getest.** Ontwikkeld is tegen de gedocumenteerde WebSocket-interface van python-matter-server en tegen een gesimuleerde server.
 - **Fabrikant en apparaatnaam** komen uit de basisgegevens van het apparaat (fabrikantnaam en productnaam). Begint de productnaam met de fabrikantnaam, dan wordt die eraf gehaald; ontbreekt de fabrikant, dan wordt deze alleen herkend als een ander apparaat dezelfde fabrikantnaam meldt. Zonder deze gegevens verschijnt het apparaat onder „Onbekend”. De apparaatklasse komt uit de apparaattypen van de endpoints; apparaten met een onbekend type komen onder „Overig”. Beide zijn alleen met gesimuleerde gegevens gecontroleerd.
 - **Schrijvende Matter-commando's zijn ongetest:** het formaat van `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` en `remove_matter_fabric` kan per versie van de Matter Server verschillen. Dan heeft de functie geen effect of meldt hij een fout – lezende functies worden hierdoor niet beïnvloed.
 - **Geen groepen:** Zigbee-groepen hebben in Matter geen directe equivalent voor deze interface; de categorie heet daarom „Fabrics”.
-- **Geen apparaatafbeeldingen:** Matter levert geen productafbeeldingen, er worden pictogrammen per apparaattype getoond.
+- **Apparaatafbeeldingen:** Het aantal treffers van de afbeeldingenbibliotheek bij Matter-apparaten is onbekend; de afbeeldingsnamen zijn kandidaten, geen gegarandeerde match. Ontbreekt een afbeelding, dan verschijnt het pictogram. Het ophalen bij `zigbee2mqtt.io` kon in de ontwikkelomgeving niet worden gecontroleerd.
+- **Functies:** Het uitlezen van de functie-attributen en het schakelcommando (`device_command` On/Off) zijn alleen met gesimuleerde gegevens getest – **ongetest op echte hardware**. Sensorwaarden verversen ongeveer eens per minuut; apparaten achter bridges kunnen nu worden geschakeld als ze OnOff melden. Met `read_only: true` verdwijnen schakelaars en entiteitenlijst.
 - Signaalsterkte bestaat alleen voor wifi- en Thread-apparaten (bij Thread: beste buur). Bridge- en ethernetapparaten hebben geen waarde.
 - Apparaten op batterij (Thread, „slapend”) halen updates en bindings vaak pas na uren of na een druk op de knop op.
 - De entiteitenvoorbeeldweergave bij het hernoemen vindt apparaten via de identifiers van de Matter-integratie en kan in speciale gevallen leeg blijven.
@@ -200,6 +207,7 @@ Alle schrijfacties (hernoemen, verwijderen, firmware, bindings, fabrics, apparaa
 
 | Versie | Wijziging |
 |---|---|
+| **1.0.3** | Nieuw: kleine apparaatafbeeldingen (kandidaten uit de Zigbee2MQTT-afbeeldingenbibliotheek, uitschakelbaar, eigen afbeeldingenmap mogelijk), categorie **Functies** met schakelbare aan/uit-schakelaars en meetwaarden, in de apparaatpopup de secties Functies en Entiteiten met kopiëren naar het klembord. Nieuwe sleutels `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Alleen met gesimuleerde gegevens en in een headless browser getest, niet op echte hardware |
 | **1.0.2** | Resourcepad van de kaart gecorrigeerd: `/matter_manager/matter-manager-card.js` in plaats van `/matter_manager_files/…` (bestaande items worden automatisch omgezet). Fabrikant en apparaatnaam worden uit de typeaanduiding gelezen. Nieuw: filters en groeperen (fabrikant, apparaatnaam, apparaatklasse) zoals in de Zigbee2MQTT Manager. Frans (pull request #1) |
 | 1.0.1 | Eerste publicatie op GitHub: nieuw pictogram en logo, Nederlands (integratie en kaart), README in drie talen |
 | 1.0.0 | Interne stand vóór de publicatie |

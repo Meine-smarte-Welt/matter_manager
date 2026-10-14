@@ -1,0 +1,12 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): fc1e664fc20a6d6a3dbc028a15e8c473c3dfae2e044e7ba03c8c69cd672e6fd4
+# Nur die Kategorie "Funktionen" (Ein/Aus-Schalter direkt in der Karte)
+type: custom:matter-manager-card
+title: Schalter
+show_devices: false
+show_battery: false
+show_updates: false
+show_fabrics: false
+show_bindings: false
+show_bridge: false
+show_functions: true
+default_tab: functions

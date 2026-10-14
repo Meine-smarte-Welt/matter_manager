@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d0d6f25e8133e0fd912c79c3d98adc93b2d2ed04e984e17764ef49fb298ee589
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 951f9b13ac5e6423950eb1c76318a9307000331da6d9bd30e281aa8a331df84b
 """Hält den Zustand des Matter Servers und sendet Befehle an Geräte."""
 
 from __future__ import annotations
@@ -57,6 +57,8 @@ _LOGGER = logging.getLogger(__name__)
 Listener = Callable[[str, Any], None]
 
 # --- Matter-Cluster ---------------------------------------------------------
+C_ONOFF = 6
+C_LEVEL = 8
 C_DESCRIPTOR = 29
 C_BINDING = 30
 C_ACL = 31
@@ -69,11 +71,24 @@ C_WIFI = 54
 C_ETHERNET = 55
 C_BRIDGED = 57
 C_OPCRED = 62
+C_DOORLOCK = 257
+C_COVER = 258
+C_THERMOSTAT = 513
+C_FAN = 514
+C_COLOR = 768
+C_ILLUMINANCE = 1024
+C_TEMPERATURE = 1026
+C_PRESSURE = 1027
+C_HUMIDITY = 1029
+C_OCCUPANCY = 1030
 
 # Attribute, deren Änderung die Karte neu zeichnen lässt (None = alle Attribute).
 # Zähler und Nachbartabellen der Netzwerk-Diagnose ändern sich ständig und
 # werden deshalb nur über den regelmäßigen Neuaufbau erfasst.
 _RELEVANT: dict[int, frozenset[int] | None] = {
+    C_ONOFF: frozenset({0}),
+    C_DOORLOCK: frozenset({0}),
+    C_OCCUPANCY: frozenset({0}),
     C_DESCRIPTOR: None,
     C_BINDING: None,
     C_BASIC: None,
@@ -355,6 +370,137 @@ def _icon_of(view: _NodeView, endpoints: Iterable[int]) -> str | None:
             if icon:
                 return icon
     return None
+
+
+
+# --- Funktionen (Expose) und Gerätebilder (seit 1.0.3) ---------------------------
+# Schutz vor unerwartet vielen Zeilen je Gerät (große Bridges)
+_FUNCTIONS_MAX = 40
+# Gerätebilder: höchstens so viele Namenskandidaten je Gerät, jeweils höchstens so lang
+_IMAGE_KEYS_MAX = 4
+_IMAGE_KEY_LEN = 64
+_IMAGE_KEY_RE = re.compile(r"^[^\x00-\x1f\x7f<>\"'\\?#%]+$")
+
+_LOCK_STATES = {0: "not_fully_locked", 1: "locked", 2: "unlocked", 3: "unlatched"}
+
+
+def _func_row(
+    ep: int,
+    cluster: int,
+    attribute: int,
+    key: str,
+    kind: str,
+    value: Any,
+    unit: str | None = None,
+    switchable: bool = False,
+) -> dict[str, Any]:
+    return {
+        "id": f"{ep}/{cluster}/{attribute}",
+        "endpoint": ep,
+        "key": key,
+        "kind": kind,
+        "value": value,
+        "unit": unit,
+        "switchable": switchable,
+    }
+
+
+def _centi(value: Any) -> float | None:
+    """Messwert in Hundertsteln (z. B. 2150 -> 21.5)."""
+    raw = _int(value)
+    return None if raw is None else round(raw / 100, 1)
+
+
+def _functions_of(view: _NodeView, endpoints: Iterable[int]) -> list[dict[str, Any]]:
+    """Funktionen (Matter-Entsprechung zu "Expose") samt aktuellem Wert.
+
+    Nur ein Ein/Aus-Schalter (Cluster OnOff, Attribut OnOff) ist schaltbar; alles
+    andere wird angezeigt. Schlösser lassen sich bewusst nicht aus der Karte öffnen.
+    """
+    rows: list[dict[str, Any]] = []
+    for ep in sorted(set(endpoints)):
+        if ep == 0:
+            continue
+        servers = view.servers.get(ep, set())
+
+        if C_ONOFF in servers:
+            state = view.get(ep, C_ONOFF, 0)
+            if isinstance(state, bool):
+                rows.append(_func_row(ep, C_ONOFF, 0, "onoff", "switch", state, None, True))
+        if C_LEVEL in servers:
+            level = _int(view.get(ep, C_LEVEL, 0))
+            if level is not None and 0 <= level <= 254:
+                rows.append(
+                    _func_row(ep, C_LEVEL, 0, "level", "number", round(level * 100 / 254), "%")
+                )
+        if C_COLOR in servers:
+            mireds = _int(view.get(ep, C_COLOR, 7))
+            if mireds is not None and mireds > 0:
+                rows.append(
+                    _func_row(ep, C_COLOR, 7, "color_temp", "number", round(1_000_000 / mireds), "K")
+                )
+        if C_DOORLOCK in servers:
+            lock = _LOCK_STATES.get(_int(view.get(ep, C_DOORLOCK, 0)) or -1)
+            if lock:
+                rows.append(_func_row(ep, C_DOORLOCK, 0, "lock", "enum", lock))
+        if C_COVER in servers:
+            closed = _int(view.get(ep, C_COVER, 8))
+            if closed is not None and 0 <= closed <= 100:
+                rows.append(_func_row(ep, C_COVER, 8, "cover_closed", "number", closed, "%"))
+        if C_THERMOSTAT in servers:
+            for attribute, key in ((0, "temperature"), (18, "target_heat"), (17, "target_cool")):
+                value = _centi(view.get(ep, C_THERMOSTAT, attribute))
+                if value is not None:
+                    rows.append(_func_row(ep, C_THERMOSTAT, attribute, key, "number", value, "°C"))
+        if C_FAN in servers:
+            percent = _int(view.get(ep, C_FAN, 2))
+            if percent is not None and 0 <= percent <= 100:
+                rows.append(_func_row(ep, C_FAN, 2, "fan_percent", "number", percent, "%"))
+        if C_TEMPERATURE in servers:
+            value = _centi(view.get(ep, C_TEMPERATURE, 0))
+            if value is not None:
+                rows.append(_func_row(ep, C_TEMPERATURE, 0, "temperature", "number", value, "°C"))
+        if C_HUMIDITY in servers:
+            value = _centi(view.get(ep, C_HUMIDITY, 0))
+            if value is not None:
+                rows.append(_func_row(ep, C_HUMIDITY, 0, "humidity", "number", value, "%"))
+        if C_PRESSURE in servers:
+            value = _int(view.get(ep, C_PRESSURE, 0))
+            if value is not None:
+                rows.append(_func_row(ep, C_PRESSURE, 0, "pressure", "number", value, "hPa"))
+        if C_ILLUMINANCE in servers:
+            raw = _int(view.get(ep, C_ILLUMINANCE, 0))
+            if raw is not None and 0 < raw < 65535:
+                lux = round(10 ** ((raw - 1) / 10000), 1)
+                rows.append(_func_row(ep, C_ILLUMINANCE, 0, "illuminance", "number", lux, "lx"))
+        if C_OCCUPANCY in servers:
+            occupancy = _int(view.get(ep, C_OCCUPANCY, 0))
+            if occupancy is not None:
+                rows.append(_func_row(ep, C_OCCUPANCY, 0, "occupancy", "bool", bool(occupancy & 1)))
+        if len(rows) >= _FUNCTIONS_MAX:
+            break
+    return rows[:_FUNCTIONS_MAX]
+
+
+def _image_keys(*names: str | None) -> list[str]:
+    """Namenskandidaten für das Gerätebild (Teilenummer, Produktname, …).
+
+    Matter liefert keine Produktbilder. Die Karte probiert die Kandidaten nacheinander
+    gegen die Bildbibliothek und fällt ohne Treffer auf das Symbol zurück. Die Werte
+    gelangen in eine URL; deshalb werden Zeichen verworfen, die dort nichts verloren haben.
+    """
+    keys: list[str] = []
+    for name in names:
+        if not isinstance(name, str):
+            continue
+        text = re.sub(r"\s+", " ", name).strip()
+        if not text or len(text) > _IMAGE_KEY_LEN or not _IMAGE_KEY_RE.match(text):
+            continue
+        if text.lower() not in (k.lower() for k in keys):
+            keys.append(text)
+        if len(keys) >= _IMAGE_KEYS_MAX:
+            break
+    return keys
 
 
 # Geräte-Typ (Descriptor) -> Geräteklasse für Filter und Gruppierung
@@ -1047,6 +1193,10 @@ class MatterManager:
             "bindings": bindings,
             "binding_endpoints": binding_endpoints,
             "ota": self._ota_of(node_id, view, sw_int),
+            "functions": _functions_of(view, view.owned),
+            "image_keys": _image_keys(
+                _str(view.get(0, C_BASIC, 12)), product, product_label, model_name
+            ),
         }
         result = [device]
 
@@ -1104,6 +1254,10 @@ class MatterManager:
                     "fabrics_count": 0,
                     "bindings": [],
                     "binding_endpoints": [],
+                    "functions": _functions_of(view, parts),
+                    "image_keys": _image_keys(
+                        _str(view.get(ep, C_BRIDGED, 12)), b_product, b_plabel, b_model
+                    ),
                     "ota": {
                         "capable": False,
                         "state": None,
@@ -1488,6 +1642,50 @@ class MatterManager:
             "interview",
             self.client.send_command(
                 "interview_node", request_timeout=_T_INTERVIEW, node_id=node_id
+            ),
+        )
+
+    # --- Funktionen (Expose) ------------------------------------------
+    def _function_row(self, device_id: Any, function: Any) -> tuple[int, dict[str, Any]]:
+        """Knoten-ID und Funktionszeile zu einem Gerät und einer Funktions-ID ("1/6/0")."""
+        node_id, endpoint = self._resolve(device_id)
+        view = _NodeView(self._nodes[node_id])
+        if endpoint is None:
+            endpoints: set[int] = set(view.owned)
+        else:
+            endpoints = view.descendants(endpoint) | {endpoint}
+        if not isinstance(function, str) or not function:
+            raise ValueError("Keine Funktion angegeben")
+        row = next((r for r in _functions_of(view, endpoints) if r["id"] == function), None)
+        if row is None:
+            raise ValueError(f"Unbekannte Funktion: {function}")
+        return node_id, row
+
+    async def async_set_function(self, device_id: Any, function: Any, value: Any) -> None:
+        """Einen Ein/Aus-Schalter eines Geräts umlegen.
+
+        Geprüft wird alles im Backend: Das Gerät muss bekannt und erreichbar sein, die
+        Funktion muss in seinen Funktionen stehen und ein Ein/Aus-Schalter sein, und der
+        Wert muss ein Ja/Nein-Wert sein. Es gibt bewusst nur "Ein" und "Aus" (kein
+        "Umschalten"), damit das Ergebnis eindeutig ist.
+        """
+        node_id, row = self._function_row(device_id, function)
+        if not row["switchable"]:
+            raise ValueError("Diese Funktion lässt sich nicht schalten")
+        if not isinstance(value, bool):
+            raise ValueError("Ungültiger Wert (erwartet: Ein oder Aus)")
+        if self._nodes[node_id].get("available") is not True:
+            raise ValueError("Das Gerät ist nicht erreichbar")
+        self._spawn_op(
+            "function",
+            self.client.send_command(
+                "device_command",
+                request_timeout=20,
+                node_id=node_id,
+                endpoint_id=row["endpoint"],
+                cluster_id=C_ONOFF,
+                command_name="On" if value else "Off",
+                payload={},
             ),
         )
 

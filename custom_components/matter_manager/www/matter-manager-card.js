@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): daeb79421689554b4a07e4a474df241e82744616d578b8f07a62fbafb8ba0149
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 85dfdf65c263bfdcf553fdf4e7fb9a8cb280821641fbd02b99f2a514a96e5af3
 /**
  * matter-manager-card
  * -------------------
@@ -13,6 +13,8 @@
  *   Geräte      - Liste aller Matter-Geräte mit Erreichbarkeit, Signal, Batterie
  *   Batterie    - batteriebetriebene Geräte, niedrigster Ladestand zuerst
  *   Updates     - OTA-Firmware: prüfen, einzeln oder nacheinander installieren
+ *   Funktionen  - alle Funktionen (Expose), die Matter für die Geräte meldet, mit
+ *                 aktuellem Wert; Ein/Aus-Schalter lassen sich direkt umlegen
  *   Fabrics     - Ökosysteme (Apple Home, Google Home, Alexa …), mit denen die
  *                 Geräte verbunden sind (Multi-Admin); Verbindung entfernen
  *   Bindings    - Übersicht, Anlegen und Lösen von Gerät-zu-Gerät-Verknüpfungen
@@ -21,8 +23,10 @@
  *
  * Jede Kategorie ist einzeln ein-/ausblendbar (show_* im Editor bzw. YAML).
  * Tippt man auf ein Gerät, öffnet sich ein Popup mit Akkordeon-Abschnitten:
- * Info, Umbenennen (inkl. betroffener Entitäten), Firmware, Bindings, Fabrics
- * (inkl. Freigabe für ein weiteres Ökosystem), Diagnose und Entfernen.
+ * Info, Funktionen, Entitäten (zum Kopieren für Automationen), Umbenennen (inkl.
+ * betroffener Entitäten), Firmware, Bindings, Fabrics (inkl. Freigabe für ein
+ * weiteres Ökosystem), Diagnose und Entfernen. Geräte zeigen ein kleines Bild
+ * (Namenskandidaten gegen eine Bildbibliothek, sonst das Symbol).
  *
  * Alle schreibenden Aktionen laufen über die Integration und sind dort auf
  * Administratoren beschränkt. Mit `read_only: true` blendet die Karte alle
@@ -36,15 +40,16 @@
  * Kartentyp: custom:matter-manager-card
  */
 
-const CARD_VERSION = "1.0.2";
+const CARD_VERSION = "1.0.3";
 const RELEASES_URL = "https://github.com/Meine-smarte-Welt/matter_manager/releases";
 
-const TAB_ORDER = ["devices", "battery", "updates", "fabrics", "bindings", "bridge"];
+const TAB_ORDER = ["devices", "battery", "updates", "functions", "fabrics", "bindings", "bridge"];
 
 const TAB_META = {
   devices: { icon: "mdi:matter", label: "tab_devices" },
   battery: { icon: "mdi:battery-70", label: "tab_battery" },
   updates: { icon: "mdi:update", label: "tab_updates" },
+  functions: { icon: "mdi:toggle-switch-outline", label: "tab_functions" },
   fabrics: { icon: "mdi:home-group", label: "tab_fabrics" },
   bindings: { icon: "mdi:link-variant", label: "tab_bindings" },
   bridge: { icon: "mdi:cog", label: "tab_bridge" },
@@ -130,6 +135,42 @@ const DEVICE_ICON = {
 };
 const DEFAULT_DEVICE_ICON = "mdi:matter";
 
+// --- Gerätebilder (seit 1.0.3) -------------------------------------------
+//
+// Matter liefert keine Produktbilder. Standardquelle ist dieselbe Bildbibliothek wie beim
+// Zigbee2MQTT Manager. Das Backend liefert je Gerät Namenskandidaten (Teilenummer,
+// Produktname …); die Karte probiert sie nacheinander durch und zeigt ohne Treffer das
+// Symbol. Eigene Quelle: `image_base`; eigene Zuordnung je Gerät: `device_images`.
+const DEFAULT_IMAGE_BASE = "https://www.zigbee2mqtt.io/images/devices/";
+// Nur https:// oder ein lokaler Pfad (/local/…); nichts, was ein Attribut verlassen könnte
+const SAFE_URL_RE = /^(https:\/\/[^\s"'<>\\]+|\/[^\s"'<>\\]*)$/;
+
+function safeImageUrl(value) {
+  const v = String(value || "").trim();
+  return SAFE_URL_RE.test(v) && !v.startsWith("//") ? v : "";
+}
+
+function imageBase(cfg) {
+  const base = safeImageUrl(cfg.image_base) || DEFAULT_IMAGE_BASE;
+  return base.endsWith("/") ? base : `${base}/`;
+}
+
+// Mögliche Bild-Adressen eines Geräts in der Reihenfolge, in der sie probiert werden
+function deviceImageUrls(d, cfg) {
+  const map = cfg.device_images && typeof cfg.device_images === "object" ? cfg.device_images : null;
+  if (map) {
+    const lower = {};
+    for (const [k, v] of Object.entries(map)) lower[String(k).trim().toLowerCase()] = v;
+    const names = [d.name, d.vendor && d.model ? `${d.vendor} ${d.model}` : "", d.model, d.id];
+    for (const n of names) {
+      const hit = safeImageUrl(lower[String(n ?? "").trim().toLowerCase()]);
+      if (hit) return [hit];
+    }
+  }
+  const base = imageBase(cfg);
+  return (d.image_keys || []).map((k) => `${base}${encodeURIComponent(String(k).replace(/\//g, "-"))}.png`);
+}
+
 // --- Konfigurierbare Farben ---------------------------------------------
 //
 // Jede Farbgruppe entspricht einer CSS-Custom-Property, die _colorVars() pro
@@ -173,6 +214,7 @@ const CONFIG_DEFAULTS = {
   show_devices: true,
   show_battery: true,
   show_updates: true,
+  show_functions: true,
   show_fabrics: true,
   show_bindings: true,
   show_bridge: true,
@@ -181,6 +223,9 @@ const CONFIG_DEFAULTS = {
   max_rows: 0, // 0 = alle Zeilen
   zoom: 1,
   show_stats: true,
+  show_images: true,
+  // Bildquelle (Ordner-URL oder lokaler Pfad); leer = Standard-Bibliothek
+  image_base: "",
   show_search: true,
   show_filter_bar: true,
   default_sort: DEFAULT_SORT,
@@ -208,6 +253,7 @@ const CONFIG_DEFAULTS = {
   color_icon_devices: "",
   color_icon_battery: "",
   color_icon_updates: "",
+  color_icon_functions: "",
   color_icon_fabrics: "",
   color_icon_bindings: "",
   color_icon_bridge: "",
@@ -328,6 +374,23 @@ const I18N = {
     flt_hint: "Mehrere Filter gelten gleichzeitig (UND). „Online/Offline“ kommt vom Matter Server. Die Filter gelten für Geräte, Batterie und Updates.",
     cls_light: "Lampen", cls_switch: "Steckdosen & Schalter", cls_climate: "Heizung & Klima", cls_cover: "Rollos & Jalousien", cls_lock: "Schlösser",
     cls_fan: "Lüfter", cls_remote: "Taster & Fernbedienungen", cls_sensor: "Sensoren", cls_appliance: "Haushaltsgeräte", cls_media: "Medien", cls_bridge: "Bridges", cls_other: "Sonstige",
+    // Funktionen (Expose), Entitäten kopieren, Gerätebilder (seit 1.0.3)
+    tab_functions: "Funktionen",
+    fn_chip_all: "Mit Funktionen", fn_chip_switch: "Schaltbar", fn_chip_on: "Eingeschaltet",
+    fn_none: "Noch keine Geräte mit Funktionen.",
+    fn_hint: "Alle Funktionen, die Matter für die Geräte meldet, mit dem aktuellen Wert. Ein/Aus-Schalter lassen sich direkt umlegen und wirken sofort am Gerät. Alles andere wird nur angezeigt – steuern lässt es sich wie bisher über die Home-Assistant-Entitäten.",
+    fn_hint_ro: "Alle Funktionen, die Matter für die Geräte meldet, mit dem aktuellen Wert (nur Anzeige).",
+    sec_functions: "Funktionen (Expose)", no_functions: "Dieses Gerät meldet keine Funktionen.",
+    fn_on: "An", fn_off: "Aus", fn_present: "Anwesend", fn_absent: "Nicht anwesend",
+    fn_onoff: "Ein/Aus", fn_level: "Dimmstufe", fn_color_temp: "Farbtemperatur", fn_lock: "Schloss", fn_cover_closed: "Geschlossen (Position)",
+    fn_temperature: "Temperatur", fn_target_heat: "Solltemperatur Heizen", fn_target_cool: "Solltemperatur Kühlen", fn_fan_percent: "Lüfterstufe",
+    fn_humidity: "Luftfeuchtigkeit", fn_pressure: "Luftdruck", fn_illuminance: "Beleuchtungsstärke", fn_occupancy: "Anwesenheit",
+    fn_v_locked: "Verriegelt", fn_v_unlocked: "Entriegelt", fn_v_not_fully_locked: "Nicht ganz verriegelt", fn_v_unlatched: "Falle zurückgezogen",
+    sec_entities: "Entitäten (für Automationen)", no_entities: "Keine Home-Assistant-Entitäten gefunden.",
+    entities_hint: "Entitäts-Namen aus Home Assistant. Mit dem Symbol kopierst du einen Namen in die Zwischenablage, zum Beispiel für Automationen oder Skripte.",
+    copy: "In die Zwischenablage kopieren", copy_all: "Alle kopieren", copy_entities: "Entitäts-Namen kopieren",
+    copied: "Kopiert: {v}", copied_n: "{n} Entitäten kopiert",
+    copy_failed: "Kopieren nicht möglich. Der Browser erlaubt die Zwischenablage nur über HTTPS.", copy_manual: "Zum Kopieren markieren (Strg+C):",
   },
   en: {
     connecting: "Connecting …",
@@ -422,6 +485,23 @@ const I18N = {
     flt_hint: "Several filters apply together (AND). “Online/Offline” comes from the Matter Server. Filters apply to Devices, Battery and Updates.",
     cls_light: "Lights", cls_switch: "Plugs & switches", cls_climate: "Heating & climate", cls_cover: "Blinds & covers", cls_lock: "Locks",
     cls_fan: "Fans", cls_remote: "Buttons & remotes", cls_sensor: "Sensors", cls_appliance: "Appliances", cls_media: "Media", cls_bridge: "Bridges", cls_other: "Other",
+    // Functions (expose), copy entities, device images (since 1.0.3)
+    tab_functions: "Functions",
+    fn_chip_all: "With functions", fn_chip_switch: "Switchable", fn_chip_on: "Switched on",
+    fn_none: "No devices with functions yet.",
+    fn_hint: "All functions Matter reports for the devices, with the current value. On/off switches can be toggled directly and take effect on the device immediately. Everything else is display only – control it as before through the Home Assistant entities.",
+    fn_hint_ro: "All functions Matter reports for the devices, with the current value (display only).",
+    sec_functions: "Functions (expose)", no_functions: "This device reports no functions.",
+    fn_on: "On", fn_off: "Off", fn_present: "Present", fn_absent: "Not present",
+    fn_onoff: "On/off", fn_level: "Brightness level", fn_color_temp: "Color temperature", fn_lock: "Lock", fn_cover_closed: "Closed (position)",
+    fn_temperature: "Temperature", fn_target_heat: "Heating setpoint", fn_target_cool: "Cooling setpoint", fn_fan_percent: "Fan speed",
+    fn_humidity: "Humidity", fn_pressure: "Air pressure", fn_illuminance: "Illuminance", fn_occupancy: "Occupancy",
+    fn_v_locked: "Locked", fn_v_unlocked: "Unlocked", fn_v_not_fully_locked: "Not fully locked", fn_v_unlatched: "Unlatched",
+    sec_entities: "Entities (for automations)", no_entities: "No Home Assistant entities found.",
+    entities_hint: "Entity names from Home Assistant. Use the icon to copy a name to the clipboard, for example for automations or scripts.",
+    copy: "Copy to clipboard", copy_all: "Copy all", copy_entities: "Copy entity names",
+    copied: "Copied: {v}", copied_n: "{n} entities copied",
+    copy_failed: "Copying failed. The browser only allows clipboard access over HTTPS.", copy_manual: "Select to copy (Ctrl+C):",
   },
   nl: {
     connecting: "Verbinden …",
@@ -516,6 +596,23 @@ const I18N = {
     flt_hint: "Meerdere filters gelden tegelijk (EN). “Online/Offline” komt van de Matter Server. De filters gelden voor Apparaten, Batterij en Updates.",
     cls_light: "Lampen", cls_switch: "Stekkers & schakelaars", cls_climate: "Verwarming & klimaat", cls_cover: "Rolluiken & zonwering", cls_lock: "Sloten",
     cls_fan: "Ventilatoren", cls_remote: "Knoppen & afstandsbedieningen", cls_sensor: "Sensoren", cls_appliance: "Huishoudapparaten", cls_media: "Media", cls_bridge: "Bridges", cls_other: "Overig",
+    // Functies (expose), entiteiten kopiëren, apparaatafbeeldingen (sinds 1.0.3)
+    tab_functions: "Functies",
+    fn_chip_all: "Met functies", fn_chip_switch: "Schakelbaar", fn_chip_on: "Ingeschakeld",
+    fn_none: "Nog geen apparaten met functies.",
+    fn_hint: "Alle functies die Matter voor de apparaten meldt, met de actuele waarde. Aan/uit-schakelaars kun je direct omzetten; het werkt meteen op het apparaat. Al het andere wordt alleen weergegeven – bedien het zoals voorheen via de Home Assistant-entiteiten.",
+    fn_hint_ro: "Alle functies die Matter voor de apparaten meldt, met de actuele waarde (alleen weergave).",
+    sec_functions: "Functies (expose)", no_functions: "Dit apparaat meldt geen functies.",
+    fn_on: "Aan", fn_off: "Uit", fn_present: "Aanwezig", fn_absent: "Niet aanwezig",
+    fn_onoff: "Aan/uit", fn_level: "Dimniveau", fn_color_temp: "Kleurtemperatuur", fn_lock: "Slot", fn_cover_closed: "Gesloten (positie)",
+    fn_temperature: "Temperatuur", fn_target_heat: "Streeftemperatuur verwarmen", fn_target_cool: "Streeftemperatuur koelen", fn_fan_percent: "Ventilatorstand",
+    fn_humidity: "Luchtvochtigheid", fn_pressure: "Luchtdruk", fn_illuminance: "Lichtsterkte", fn_occupancy: "Aanwezigheid",
+    fn_v_locked: "Vergrendeld", fn_v_unlocked: "Ontgrendeld", fn_v_not_fully_locked: "Niet volledig vergrendeld", fn_v_unlatched: "Schoot teruggetrokken",
+    sec_entities: "Entiteiten (voor automatiseringen)", no_entities: "Geen Home Assistant-entiteiten gevonden.",
+    entities_hint: "Entiteitsnamen uit Home Assistant. Met het pictogram kopieer je een naam naar het klembord, bijvoorbeeld voor automatiseringen of scripts.",
+    copy: "Naar klembord kopiëren", copy_all: "Alles kopiëren", copy_entities: "Entiteitsnamen kopiëren",
+    copied: "Gekopieerd: {v}", copied_n: "{n} entiteiten gekopieerd",
+    copy_failed: "Kopiëren mislukt. De browser staat het klembord alleen toe via HTTPS.", copy_manual: "Selecteer om te kopiëren (Ctrl+C):",
   },
   fr: {
     connecting: "Connexion …",
@@ -610,6 +707,23 @@ const I18N = {
     flt_hint: "Plusieurs filtres s'appliquent ensemble (ET). « En ligne/Hors ligne » provient du Matter Server. Les filtres s'appliquent aux appareils, à la batterie et aux mises à jour.",
     cls_light: "Lampes", cls_switch: "Prises & interrupteurs", cls_climate: "Chauffage & climat", cls_cover: "Volets & stores", cls_lock: "Serrures",
     cls_fan: "Ventilateurs", cls_remote: "Boutons & télécommandes", cls_sensor: "Capteurs", cls_appliance: "Électroménager", cls_media: "Média", cls_bridge: "Bridges", cls_other: "Autres",
+    // Fonctions (expose), copie des entités, images des appareils (depuis 1.0.3)
+    tab_functions: "Fonctions",
+    fn_chip_all: "Avec fonctions", fn_chip_switch: "Commutables", fn_chip_on: "Allumés",
+    fn_none: "Aucun appareil avec fonctions pour le moment.",
+    fn_hint: "Toutes les fonctions signalées par Matter pour les appareils, avec la valeur actuelle. Les interrupteurs marche/arrêt se basculent directement et agissent immédiatement sur l'appareil. Le reste est affiché uniquement – pour le piloter, utilisez comme avant les entités de Home Assistant.",
+    fn_hint_ro: "Toutes les fonctions signalées par Matter pour les appareils, avec la valeur actuelle (affichage uniquement).",
+    sec_functions: "Fonctions (expose)", no_functions: "Cet appareil ne signale aucune fonction.",
+    fn_on: "Marche", fn_off: "Arrêt", fn_present: "Présent", fn_absent: "Absent",
+    fn_onoff: "Marche/arrêt", fn_level: "Niveau de variation", fn_color_temp: "Température de couleur", fn_lock: "Serrure", fn_cover_closed: "Fermé (position)",
+    fn_temperature: "Température", fn_target_heat: "Consigne de chauffage", fn_target_cool: "Consigne de refroidissement", fn_fan_percent: "Vitesse du ventilateur",
+    fn_humidity: "Humidité", fn_pressure: "Pression atmosphérique", fn_illuminance: "Éclairement", fn_occupancy: "Présence",
+    fn_v_locked: "Verrouillée", fn_v_unlocked: "Déverrouillée", fn_v_not_fully_locked: "Pas entièrement verrouillée", fn_v_unlatched: "Pêne rétracté",
+    sec_entities: "Entités (pour les automatisations)", no_entities: "Aucune entité Home Assistant trouvée.",
+    entities_hint: "Noms d'entités de Home Assistant. Le symbole copie un nom dans le presse-papiers, par exemple pour des automatisations ou des scripts.",
+    copy: "Copier dans le presse-papiers", copy_all: "Tout copier", copy_entities: "Copier les noms d'entités",
+    copied: "Copié : {v}", copied_n: "{n} entités copiées",
+    copy_failed: "Copie impossible. Le navigateur n'autorise le presse-papiers qu'en HTTPS.", copy_manual: "Sélectionner pour copier (Ctrl+C) :",
   },
 };
 
@@ -834,8 +948,36 @@ const BASE_CARD_STYLES = `
   .progress { height: 6px; border-radius: 3px; background: var(--divider-color, #e0e0e0); overflow: hidden; margin: 4px 0; }
   .progress > span { display: block; height: 100%; background: var(--mmm-color-info); }
   .field textarea { font: inherit; box-sizing: border-box; width: 100%; border: 1px solid var(--divider-color, #e0e0e0); border-radius: 6px; padding: 6px 8px; background: var(--card-background-color, #fff); color: var(--primary-text-color, #212121); }
+  /* Funktionen (Expose), Schalter und Entitäten kopieren (seit 1.0.3) */
+  .fn-device { border-bottom: 1px solid var(--divider-color, #e0e0e0); padding-bottom: 4px; }
+  .fn-device:last-child { border-bottom: none; }
+  .fn-device > .row { border-bottom: none; }
+  .fn-lines { margin: 0 0 4px 52px; }
+  .fn-lines .settings-line { padding: 5px 0; }
+  .ex-sw { display: inline-flex; align-items: center; gap: 8px; }
+  .sw {
+    position: relative; width: 38px; height: 20px; border-radius: 10px; border: none; padding: 0; cursor: pointer;
+    background: var(--disabled-text-color, #9e9e9e); transition: background 0.15s ease; flex-shrink: 0;
+  }
+  .sw .knob {
+    position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--card-background-color, #fff); transition: transform 0.15s ease; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .sw.on { background: var(--mmm-color-success); }
+  .sw.on .knob { transform: translateX(18px); }
+  .sw[disabled] { opacity: 0.5; cursor: default; }
+  .sw:focus-visible { outline: 2px solid var(--mmm-color-tab-active); outline-offset: 2px; }
+  .sw-label { min-width: 2.2em; text-align: left; font-weight: 500; }
+  .ent-list { max-height: 260px; overflow-y: auto; }
+  .ent { display: flex; flex-direction: column; min-width: 0; }
+  .ent code { font-size: 0.9em; word-break: break-all; }
+  .ent .muted { font-size: 0.78em; }
+  .manual-copy {
+    width: 100%; box-sizing: border-box; font: inherit; font-size: 0.85em; color: var(--primary-text-color, #212121);
+    background: var(--card-background-color, #fff); border: 1px solid var(--divider-color, #e0e0e0); border-radius: 6px; padding: 6px 8px;
+  }
   .btn.confirm { background: var(--mmm-color-error); border-color: var(--mmm-color-error); color: #fff; }
-  @media (prefers-reduced-motion: reduce) { .toast, .settings-accordion-summary::after { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .toast, .settings-accordion-summary::after, .sw, .sw .knob { transition: none; } }
 `;
 
 // Unterhalb ~480 px Kartenbreite wird auf reine Icons umgeschaltet (Tooltip via
@@ -891,6 +1033,13 @@ class MatterManagerCard extends HTMLElement {
     this._lastSig = null;
     this._popupSig = null;
     this._built = false;
+    // Funktionen: umgelegte Schalter, die noch auf die Bestätigung des Geräts warten
+    this._fnPending = new Map();
+    this._fnFilter = "all";
+    // Gerätebilder, die nicht geladen werden konnten (dann nächster Kandidat bzw. Symbol)
+    this._imgFailed = new Set();
+    // Text, den der Browser nicht in die Zwischenablage lassen wollte (zum Markieren)
+    this._manualCopy = null;
   }
 
   // ----------------------------------------------------------------- Lebenszyklus
@@ -935,6 +1084,8 @@ class MatterManagerCard extends HTMLElement {
     }
     clearTimeout(this._toastTimer);
     clearTimeout(this._confirmTimer);
+    clearTimeout(this._imgTimer);
+    clearTimeout(this._fnTimer);
   }
 
   getCardSize() {
@@ -984,6 +1135,7 @@ class MatterManagerCard extends HTMLElement {
   _onEvent(ev) {
     if (ev.kind === "update") {
       this._data = ev.data;
+      this._fnSettle();
       this._renderIfChanged();
     } else if (ev.kind === "response") {
       this._onResponse(ev.data);
@@ -993,6 +1145,10 @@ class MatterManagerCard extends HTMLElement {
   _onResponse(r) {
     if (r.status === "error") {
       this._toast(r.error || this._t("error_generic"), true);
+      if (r.topic === "function" && this._fnPending.size) {
+        this._fnPending.clear();
+        this._fnRedraw();
+      }
       return;
     }
     const topic = r.topic || "";
@@ -1123,6 +1279,23 @@ class MatterManagerCard extends HTMLElement {
       <div class="toast" id="toast" role="status"></div>`;
     this._styleEl = root.getElementById("base");
     this._contentEl = root.getElementById("content");
+
+    // Ladefehler von Gerätebildern (error bubbelt nicht -> Capture): diese Adresse merken und
+    // neu zeichnen; dann kommt der nächste Namenskandidat bzw. das Symbol
+    root.addEventListener(
+      "error",
+      (e) => {
+        const img = e.target;
+        if (!img || img.tagName !== "IMG" || !img.classList.contains("dev-img")) return;
+        this._imgFailed.add(img.getAttribute("src"));
+        clearTimeout(this._imgTimer);
+        this._imgTimer = setTimeout(() => {
+          this._refresh();
+          if (this._selected) this._renderPopup(true);
+        }, 80);
+      },
+      true
+    );
 
     root.addEventListener("click", (e) => this._onClick(e));
     root.addEventListener("input", (e) => this._onInput(e));
@@ -1278,6 +1451,8 @@ class MatterManagerCard extends HTMLElement {
     if (!this._data && !this._error) return `<div class="empty">${esc(this._t("connecting"))}</div>`;
     if (!this._data) return "";
     switch (this._tab) {
+      case "functions":
+        return this._renderFunctions();
       case "fabrics":
         return this._renderFabrics();
       case "bindings":
@@ -1595,6 +1770,14 @@ class MatterManagerCard extends HTMLElement {
     return d.icon || DEVICE_ICON[d.type] || DEFAULT_DEVICE_ICON;
   }
 
+  // Kleines Gerätebild (leer, wenn abgeschaltet oder kein Kandidat mehr übrig)
+  _deviceImage(d, cls = "dev-img") {
+    if (this._config.show_images === false) return "";
+    const url = deviceImageUrls(d, this._config).find((u) => !this._imgFailed.has(u));
+    if (!url) return "";
+    return `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+  }
+
   _statusDot(d) {
     let cls = "";
     let tip = this._t("status_unknown");
@@ -1612,7 +1795,8 @@ class MatterManagerCard extends HTMLElement {
     const cfg = this._config;
     const color = this._rowIconColor(tab);
     const iconStyle = color ? ` style="color: ${color};"` : "";
-    const dot = tab === "devices" || tab === "bindings" ? this._statusDot(d) : "";
+    const dot = tab === "devices" || tab === "bindings" || tab === "functions" ? this._statusDot(d) : "";
+    const img = this._deviceImage(d);
 
     let secondary = "";
     let extra = "";
@@ -1648,7 +1832,7 @@ class MatterManagerCard extends HTMLElement {
     ].join("");
 
     return `<div class="row clickable" tabindex="0" role="button" data-act="open" data-id="${esc(d.id)}">
-      <span class="row-icon"${iconStyle}><ha-icon icon="${esc(this._deviceIcon(d, tab))}"></ha-icon>${dot}</span>
+      <span class="row-icon${img ? " has-image" : ""}"${iconStyle}>${img}<ha-icon icon="${esc(this._deviceIcon(d, tab))}"${img ? " hidden" : ""}></ha-icon>${dot}</span>
       <div class="row-main">
         <div class="row-primary"><span class="row-name">${esc(d.name)}</span>${badges}</div>
         <div class="row-secondary">${secondary}</div>
@@ -1732,6 +1916,151 @@ class MatterManagerCard extends HTMLElement {
           <div class="hint">${esc(this._t("update_all_hint"))}</div>`;
     }
     return `${tab === "devices" ? this._renderStats() : ""}${toolbar}${this._renderFilterBar(tab)}${this._renderFilterPanel(tab)}${this._renderActiveFilters(tab)}${this._renderRowList(tab, this._devices(tab))}`;
+  }
+
+  // ----------------------------------------------------------------- Funktionen (Expose)
+  _fnKey(d, f) {
+    return `${d.id}|${f.id}`;
+  }
+
+  _fnLabel(d, f) {
+    const base = this._t(`fn_${f.key}`);
+    const multi = new Set((d.functions || []).map((x) => x.endpoint)).size > 1;
+    return multi ? `${base} · EP ${f.endpoint}` : base;
+  }
+
+  // Wert einer Funktion als Text (Schalter ohne Bedienung, Zahlen mit Einheit, Zustände übersetzt)
+  _fnValue(f) {
+    const v = f.value;
+    if (v === null || v === undefined) return "–";
+    if (f.kind === "switch") {
+      const c = v ? ` style="--c:var(--mmm-color-success)"` : "";
+      return `<span class="pill"${c}>${esc(this._t(v ? "fn_on" : "fn_off"))}</span>`;
+    }
+    if (f.kind === "bool") return esc(this._t(v ? "fn_present" : "fn_absent"));
+    if (f.kind === "enum") return esc(this._t(`fn_v_${v}`));
+    const num = new Intl.NumberFormat(this._lang, { maximumFractionDigits: 1 }).format(v);
+    return esc(f.unit ? `${num} ${f.unit}` : num);
+  }
+
+  // Ein/Aus-Schalter; bis das Gerät den neuen Wert bestätigt, zeigt er den gewünschten Zustand
+  _fnSwitch(d, f) {
+    const pending = this._fnPending.get(this._fnKey(d, f));
+    const on = pending ? pending.target : f.value === true;
+    const offline = d.available === false;
+    const text = this._t(on ? "fn_on" : "fn_off");
+    const tip = offline ? this._t("status_offline") : text;
+    return `<span class="ex-sw"><button class="sw${on ? " on" : ""}" role="switch" aria-checked="${on}"
+        aria-label="${esc(this._fnLabel(d, f))}" title="${esc(tip)}" data-act="fn_toggle"
+        data-id="${esc(d.id)}" data-fn="${esc(f.id)}" data-next="${on ? 0 : 1}"
+        ${pending || offline ? "disabled" : ""}><span class="knob"></span></button><span class="sw-label">${esc(text)}</span></span>`;
+  }
+
+  _fnLines(d, onlySwitches = false) {
+    const ro = this._readOnly;
+    return (d.functions || [])
+      .filter((f) => !onlySwitches || f.switchable)
+      .map(
+        (f) => `<div class="settings-line"><span class="settings-label">${esc(this._fnLabel(d, f))}</span><span class="settings-value">${
+          f.switchable && !ro ? this._fnSwitch(d, f) : this._fnValue(f)
+        }</span></div>`
+      )
+      .join("");
+  }
+
+  _fnRedraw() {
+    this._refresh();
+    if (this._selected) this._renderPopup(true);
+  }
+
+  // Wartende Schalter freigeben, sobald der Wert vom Gerät bestätigt wurde
+  _fnSettle() {
+    if (!this._fnPending.size || !this._data) return;
+    for (const [key, p] of [...this._fnPending]) {
+      const [id, fn] = key.split("|");
+      const f = this._data.devices.find((x) => x.id === id)?.functions?.find((x) => x.id === fn);
+      if (!f || f.value === p.target) this._fnPending.delete(key);
+    }
+  }
+
+  async _fnToggle(id, fn, next) {
+    if (!id || !fn) return;
+    const key = `${id}|${fn}`;
+    if (this._fnPending.has(key)) return;
+    this._fnPending.set(key, { target: next });
+    this._fnRedraw();
+    const ok = await this._call("set_function", { device: id, function: fn, value: next });
+    if (!ok) {
+      this._fnPending.delete(key);
+      this._fnRedraw();
+      return;
+    }
+    // Der Matter Server meldet den neuen Wert von selbst; sonst nach 4 s wieder den echten Wert zeigen
+    clearTimeout(this._fnTimer);
+    this._fnTimer = setTimeout(() => {
+      this._fnPending.clear();
+      this._fnRedraw();
+    }, 4000);
+  }
+
+  _renderFunctions() {
+    const t = (k) => this._t(k);
+    const ro = this._readOnly;
+    const all = (this._data.devices || []).filter((d) => d.functions?.length);
+    const isSwitch = (d) => d.functions.some((f) => f.switchable);
+    const isOn = (d) => d.functions.some((f) => f.switchable && f.value === true);
+    const mode = ["all", "switch", "on"].includes(this._fnFilter) ? this._fnFilter : "all";
+    const chip = (id, n, label, color) =>
+      `<button class="chip ${mode === id ? "on" : ""}" data-act="fn_filter" data-chip="${id}"
+         style="--c:${n > 0 && color ? color : "var(--primary-text-color, #212121)"}"><b>${n}</b>${esc(label)}</button>`;
+    const chips = this._config.show_stats
+      ? `<div class="chips">${chip("all", all.length, t("fn_chip_all"), "")}${chip("switch", all.filter(isSwitch).length, t("fn_chip_switch"), "var(--mmm-color-info)")}${chip(
+          "on",
+          all.filter(isOn).length,
+          t("fn_chip_on"),
+          "var(--mmm-color-success)"
+        )}</div>`
+      : "";
+
+    let list = mode === "switch" ? all.filter(isSwitch) : mode === "on" ? all.filter(isOn) : all;
+    const q = this._search;
+    if (q) {
+      list = list.filter((d) =>
+        [d.name, d.vendor, d.model, d.bridge, ...d.functions.map((f) => this._t(`fn_${f.key}`))].some((v) =>
+          String(v ?? "").toLowerCase().includes(q)
+        )
+      );
+    }
+    list = [...list].sort((a, b) => (a.name || "").localeCompare(b.name || "", this._lang));
+
+    let body;
+    if (!list.length) {
+      body = `<div class="empty">${esc(t(all.length ? "no_results" : "fn_none"))}</div>`;
+    } else {
+      const { shown, hidden } = this._limited(list);
+      const color = this._rowIconColor("functions");
+      const iconStyle = color ? ` style="color: ${color};"` : "";
+      body = `<div class="fn-list">${shown
+        .map((d) => {
+          const img = this._deviceImage(d);
+          const secondary = [this._config.show_model ? d.model : "", this._config.show_vendor ? d.vendor : "", d.bridged && d.bridge ? `${t("f_bridge")}: ${d.bridge}` : ""]
+            .filter(Boolean)
+            .map((v) => `<span>${esc(v)}</span>`)
+            .join("");
+          const badge = d.available === false ? `<span class="badge" style="--c:var(--mmm-color-error)">${esc(t("offline"))}</span>` : "";
+          return `<div class="fn-device">
+            <div class="row clickable" tabindex="0" role="button" data-act="open" data-id="${esc(d.id)}">
+              <span class="row-icon${img ? " has-image" : ""}"${iconStyle}>${img}<ha-icon icon="${esc(this._deviceIcon(d, "functions"))}"${img ? " hidden" : ""}></ha-icon>${this._statusDot(d)}</span>
+              <div class="row-main"><div class="row-primary"><span class="row-name">${esc(d.name)}</span>${badge}</div><div class="row-secondary">${secondary}</div></div>
+            </div>
+            <div class="fn-lines">${this._fnLines(d, mode !== "all")}</div>
+          </div>`;
+        })
+        .join("")}</div>${
+        hidden ? `<div class="more"><button class="btn" data-act="more">${esc(t("show_more", { n: hidden }))}</button></div>` : ""
+      }`;
+    }
+    return `${chips}${this._renderFilterBar("functions", false)}${body}<div class="hint">${esc(t(ro ? "fn_hint_ro" : "fn_hint"))}</div>`;
   }
 
   // ----------------------------------------------------------------- Bausteine
@@ -2021,6 +2350,16 @@ class MatterManagerCard extends HTMLElement {
       case "more":
         this._expanded = true;
         return this._refresh();
+      case "fn_filter":
+        this._fnFilter = this._fnFilter === d.chip && d.chip !== "all" ? "all" : d.chip;
+        this._expanded = false;
+        return this._refresh();
+      case "fn_toggle":
+        return void (await this._fnToggle(d.id, d.fn, d.next === "1"));
+      case "copy":
+        return void (await this._copyText(d.text));
+      case "copy_all":
+        return void (await this._copyEntities(this._selected));
       case "flt_reset":
         this._flt = {};
         this._expanded = false;
@@ -2121,6 +2460,7 @@ class MatterManagerCard extends HTMLElement {
     this._selected = null;
     this._popupSig = null;
     this._confirming = null;
+    this._manualCopy = null;
     const backdrop = this.shadowRoot.getElementById("backdrop");
     if (backdrop) backdrop.hidden = true;
   }
@@ -2162,6 +2502,84 @@ class MatterManagerCard extends HTMLElement {
     return lines.map(([k, v]) => this._line(k, esc(v))).join("");
   }
 
+  _legacyCopy(text) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+      this.shadowRoot.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  // In die Zwischenablage kopieren. Ohne HTTPS verweigert der Browser den Zugriff: dann
+  // erscheint der Text markiert in einem Feld zum manuellen Kopieren (Strg+C).
+  async _copyText(text, doneMessage) {
+    const value = String(text ?? "");
+    if (!value) return false;
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(value);
+      ok = true;
+    } catch (_e) {
+      ok = this._legacyCopy(value);
+    }
+    if (!ok) {
+      this._manualCopy = value;
+      this._open["p:entities"] = true;
+      this._toast(this._t("copy_failed"), true);
+      this._renderPopup(true);
+      return false;
+    }
+    this._manualCopy = null;
+    this._toast(doneMessage || this._t("copied", { v: value }));
+    return true;
+  }
+
+  async _copyEntities(id) {
+    const det = this._details[id];
+    const ids = (det?.entities || []).map((e) => e.entity_id).filter(Boolean);
+    if (!ids.length) return this._toast(this._t(det?.loading ? "loading" : "no_entities"), true);
+    return this._copyText(ids.join("\n"), ids.length > 1 ? this._t("copied_n", { n: ids.length }) : undefined);
+  }
+
+  // Entitäten des Geräts in Home Assistant (zum Kopieren für Automationen und Skripte)
+  _entitiesBody(det) {
+    const t = (k) => this._t(k);
+    if (!det || det.loading) return `<div class="hint">${esc(t("loading"))}</div>`;
+    if (det.error) return `<div class="hint err">${esc(det.error)}</div>`;
+    const ents = det.entities || [];
+    const manual = this._manualCopy
+      ? `<div class="field"><label>${esc(t("copy_manual"))}</label><textarea class="manual-copy" readonly rows="${Math.min(
+          6,
+          String(this._manualCopy).split("\n").length
+        )}">${esc(this._manualCopy)}</textarea></div>`
+      : "";
+    if (!ents.length) return `${manual}<div class="hint">${esc(t("no_entities"))}</div>`;
+    const lines = ents
+      .map(
+        (en) => `<div class="settings-line"><span class="ent"><code>${esc(en.entity_id)}</code>${
+          en.name ? `<span class="muted">${esc(en.name)}</span>` : ""
+        }</span><button class="btn icon" data-act="copy" data-text="${esc(en.entity_id)}" title="${esc(t("copy"))}" aria-label="${esc(t("copy"))}"><ha-icon icon="mdi:content-copy"></ha-icon></button></div>`
+      )
+      .join("");
+    return `${manual}<div class="ent-list">${lines}</div>
+      <div class="toolbar"><button class="btn small" data-act="copy_all"><ha-icon icon="mdi:content-copy"></ha-icon>${esc(t("copy_all"))}</button></div>
+      <div class="hint">${esc(t("entities_hint"))}</div>`;
+  }
+
+  _functionsBody(d) {
+    const t = (k) => this._t(k);
+    const hasSwitch = !this._readOnly && (d.functions || []).some((f) => f.switchable);
+    return `${this._fnLines(d)}<div class="hint">${esc(t(hasSwitch ? "fn_hint" : "fn_hint_ro"))}</div>`;
+  }
+
   _renderPopup(force = false) {
     const backdrop = this.shadowRoot.getElementById("backdrop");
     const popup = this.shadowRoot.getElementById("popup");
@@ -2176,7 +2594,7 @@ class MatterManagerCard extends HTMLElement {
       return;
     }
     const det = this._details[d.id];
-    const sig = JSON.stringify([d, det, this._confirming, this._readOnly, this._share[d.id], this._ping[d.id], this._data.fabrics, this._data.devices.length]);
+    const sig = JSON.stringify([d, det, this._confirming, this._readOnly, this._share[d.id], this._ping[d.id], this._data.fabrics, this._data.devices.length, [...this._fnPending.keys()], this._manualCopy]);
     if (!force && sig === this._popupSig && !backdrop.hidden) return;
     this._popupSig = sig;
 
@@ -2188,6 +2606,18 @@ class MatterManagerCard extends HTMLElement {
 
     if (d.bridged) sections.push(`<div class="hint">${esc(t("bridged_hint"))}</div>`);
     sections.push(this._accordion("p:info", "mdi:information-outline", t("sec_info"), this._infoLines(d, det), { open: true }));
+
+    if (d.functions?.length) {
+      sections.push(this._accordion("p:functions", "mdi:format-list-bulleted", t("sec_functions"), this._functionsBody(d), { meta: String(d.functions.length) }));
+    }
+
+    if (!ro) {
+      sections.push(
+        this._accordion("p:entities", "mdi:code-braces", t("sec_entities"), this._entitiesBody(det), {
+          meta: det?.entities?.length ? String(det.entities.length) : "",
+        })
+      );
+    }
 
     if (!ro) {
       const entities = det?.entities?.length
@@ -2332,8 +2762,12 @@ class MatterManagerCard extends HTMLElement {
       }
     }
 
-    popup.innerHTML = `<div class="popup-head"><ha-icon icon="${esc(d.icon || DEVICE_ICON[d.type] || DEFAULT_DEVICE_ICON)}"></ha-icon>
-        <span class="popup-title">${esc(d.name)}</span>
+    const headImg = this._deviceImage(d);
+    const copyBtn = ro
+      ? ""
+      : `<button class="popup-close" data-act="copy_all" title="${esc(t("copy_entities"))}" aria-label="${esc(t("copy_entities"))}"><ha-icon icon="mdi:content-copy"></ha-icon></button>`;
+    popup.innerHTML = `<div class="popup-head">${headImg}<ha-icon icon="${esc(d.icon || DEVICE_ICON[d.type] || DEFAULT_DEVICE_ICON)}"${headImg ? " hidden" : ""}></ha-icon>
+        <span class="popup-title">${esc(d.name)}</span>${copyBtn}
         <button class="popup-close" data-act="close" aria-label="${esc(t("close"))}"><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="popup-body">${sections.join("")}</div>`;
     backdrop.hidden = false;
@@ -2367,6 +2801,7 @@ const EDITOR_LABELS = {
   show_devices: "Kategorie 'Geräte' anzeigen",
   show_battery: "Kategorie 'Batterie' anzeigen",
   show_updates: "Kategorie 'Updates' anzeigen",
+  show_functions: "Kategorie 'Funktionen' anzeigen",
   show_fabrics: "Kategorie 'Fabrics' anzeigen",
   show_bindings: "Kategorie 'Bindings' anzeigen",
   show_bridge: "Kategorie 'Server' anzeigen",
@@ -2374,6 +2809,8 @@ const EDITOR_LABELS = {
   max_rows: "Max. Zeilen je Liste (0 = alle)",
   zoom: "Zoomfaktor der Karte (z. B. für Wandtablets)",
   show_stats: "Statistik-Chips (Geräte/Offline/Batterie/Updates) anzeigen",
+  show_images: "Gerätebilder anzeigen (sonst Symbole)",
+  image_base: "Bildquelle (Ordner-URL oder lokaler Pfad, leer = Standard)",
   show_search: "Suchfeld anzeigen",
   show_filter_bar: "Sortierung auf der Karte anzeigen",
   default_sort: "Standard-Sortierung der Geräteliste",
@@ -2394,8 +2831,10 @@ const EDITOR_HELPERS = {
   entry_id: "Leer lassen, wenn nur ein Matter-Manager-Eintrag eingerichtet ist.",
   title: "Leer lassen, um keine Überschrift anzuzeigen.",
   max_rows: "Bei gesetztem Wert erscheint unter der Liste 'Weitere anzeigen'.",
+  show_images: "Matter liefert keine Produktbilder. Standardmäßig lädt die Karte sie von zigbee2mqtt.io (der Server sieht dabei Teilenummer bzw. Produktname). Ohne Treffer erscheint das Symbol. Zum Abschalten ausblenden oder eine eigene Quelle angeben.",
+  image_base: "Leer = zigbee2mqtt.io. Eigene Quelle: https://… oder lokaler Pfad wie /local/matter-bilder/. Dateiname: Teilenummer oder Produktname + .png. Eigene Zuordnung je Gerät: device_images (nur YAML, siehe README).",
   default_group_by: "Gilt für Geräte, Batterie und Updates. In der Karte lässt sich die Gruppierung jederzeit umstellen.",
-  read_only: "Blendet Umbenennen, Firmware-Installation, Binding-/Fabric-Änderungen, Gerät hinzufügen, Entfernen und Neu verbinden aus. Zusätzlich sind Aktionen ohnehin Administratoren vorbehalten.",
+  read_only: "Blendet Schalter in den Funktionen, Umbenennen, Firmware-Installation, Binding-/Fabric-Änderungen, Gerät hinzufügen, Entfernen und Neu verbinden aus. Zusätzlich sind Aktionen ohnehin Administratoren vorbehalten.",
 };
 
 function computeEditorLabel(item) {
@@ -2422,6 +2861,7 @@ const EDITOR_SCHEMA = [
       bool("show_devices"),
       bool("show_battery"),
       bool("show_updates"),
+      bool("show_functions"),
       bool("show_fabrics"),
       bool("show_bindings"),
       bool("show_bridge"),
@@ -2448,6 +2888,8 @@ const EDITOR_SCHEMA = [
       { name: "max_rows", selector: { number: { min: 0, max: 50, step: 1, mode: "slider" } } },
       { name: "zoom", selector: { number: { min: 0.5, max: 3, step: 0.1, mode: "slider" } } },
       bool("show_stats"),
+      bool("show_images"),
+      { name: "image_base", selector: { text: {} } },
       bool("show_search"),
       bool("show_filter_bar"),
       {
