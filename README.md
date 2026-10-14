@@ -1,4 +1,4 @@
-🇩🇪 Deutsch · [🇬🇧 English](README.en.md) · [🇳🇱 Nederlands](README.nl.md)
+🇩🇪 Deutsch · [🇬🇧 English](README.en.md) · [🇳🇱 Nederlands](README.nl.md) · [🇫🇷 Français](README.fr.md)
 
 # Matter Manager für Home Assistant
 
@@ -28,7 +28,7 @@ Die Karte hat sechs Kategorien in einer Symbolleiste (unter ca. 480 px Kartenbre
 
 | Kategorie | Was es kann |
 |---|---|
-| **Geräte** | Liste mit Erreichbarkeit, Modell, Hersteller, Signalstärke (dBm), Batterie, „zuletzt gesehen“; Statistik-Chips als Filter (Offline / Batterie niedrig / Updates); Suche; Sortierung; „Gerät hinzufügen“ |
+| **Geräte** | Liste mit Erreichbarkeit, Modell, Hersteller, Signalstärke (dBm), Batterie, „zuletzt gesehen“; Statistik-Chips als Filter (Offline / Batterie niedrig / Updates); Suche; Sortierung; **Filter** (Status, Strom, Signal, Netzwerk, Firmware, zuletzt gesehen, Ökosysteme, Hersteller, Gerätename, Geräteklasse) und **Gruppieren** nach Hersteller, Gerätename oder Geräteklasse; „Gerät hinzufügen“ |
 | **Batterie** | Batteriegeräte, niedrigster Stand zuerst; Farben nach niedriger und kritischer Schwelle; Geräte ohne Prozentwert zeigen den Ladezustand (OK/Warnung/Kritisch) |
 | **Updates** | Installierte vs. verfügbare Firmware; „Alle prüfen“ und „Alle nacheinander installieren“ als Hintergrundauftrag mit Fortschritt und Abbruch |
 | **Fabrics** | Ökosysteme (Apple Home, Google Home, Alexa, …), mit denen die Geräte verbunden sind; Verbindung zu einem fremden Ökosystem lösen |
@@ -45,7 +45,7 @@ Weitere Punkte:
 - **Zwei-Klick-Bestätigung** statt Browser-Dialog bei riskanten Aktionen (Entfernen, Update, Neu verbinden, Lösen).
 - **Nur lesen:** `read_only: true` blendet alle Bedienelemente zum Ändern aus (Wandtablets).
 - **Zoom:** `zoom` skaliert die ganze Karte.
-- **Sprachen:** Deutsch, Englisch und Niederländisch (Integration und Karte, nach Home-Assistant-Sprache).
+- **Sprachen:** Deutsch, Englisch, Niederländisch und Französisch (Integration und Karte, nach Home-Assistant-Sprache).
 - **Diagnose-Download** mit anonymisierten Namen und IDs.
 
 ## Voraussetzungen
@@ -65,7 +65,7 @@ Manuell: Ordner `custom_components/matter_manager` nach `<config>/custom_compone
 
 ## Die Karte
 
-Die Integration liefert die Karte aus und trägt sie als Lovelace-Ressource ein (persistiert, mit `?v=<Version>` gegen veraltete Browser-Caches). Du musst nichts manuell hinzufügen. Läuft Lovelace im YAML-Modus, trage `/matter_manager_files/matter-manager-card.js` als Ressource vom Typ `module` ein.
+Die Integration liefert die Karte aus und trägt sie als Lovelace-Ressource ein (persistiert, mit `?v=<Version>` gegen veraltete Browser-Caches). Du musst nichts manuell hinzufügen. Läuft Lovelace im YAML-Modus, trage `/matter_manager/matter-manager-card.js` als Ressource vom Typ `module` ein. Hast Du 1.0.1 im YAML-Modus eingerichtet, ändere den alten Pfad `/matter_manager_files/…` auf diesen Pfad.
 
 Karte hinzufügen: **Dashboard bearbeiten → Karte hinzufügen → „Matter Manager“**. Der grafische Editor gruppiert alle Einstellungen in auf-/zuklappbare Abschnitte (Kategorien, Darstellung mit Spalten, Bearbeiten, Farben). Es ist kein YAML nötig, aber möglich:
 
@@ -85,6 +85,9 @@ zoom: 1
 show_stats: true
 show_search: true
 show_filter_bar: true         # Sortierauswahl
+show_group_by: true           # Auswahl „Gruppieren“
+default_group_by: none        # none | vendor | model | class
+show_filters: true            # Filter-Bereich (Status, Batterie, Signal, Hersteller, …)
 default_sort: name_asc        # name_asc | name_desc | battery_asc | signal_asc | last_seen_desc | last_seen_asc | ota
 show_model: true
 show_vendor: true
@@ -173,7 +176,8 @@ Alle schreibenden Aktionen (Umbenennen, Entfernen, Firmware, Bindings, Fabrics, 
 
 ## Bekannte Einschränkungen
 
-- **Version 1.0.1 wurde nicht an echter Hardware getestet.** Entwickelt wurde gegen die dokumentierte WebSocket-Schnittstelle des python-matter-server und gegen einen simulierten Server.
+- **Version 1.0.2 wurde nicht an echter Hardware getestet.** Entwickelt wurde gegen die dokumentierte WebSocket-Schnittstelle des python-matter-server und gegen einen simulierten Server.
+- **Hersteller und Gerätename** stammen aus den Basisdaten des Geräts (Herstellername und Produktname). Beginnt der Produktname mit dem Herstellernamen, wird er abgezogen; fehlt der Hersteller, wird er nur erkannt, wenn ein anderes Gerät denselben Herstellernamen meldet. Ohne diese Angaben erscheint das Gerät unter „Unbekannt“. Die Geräteklasse kommt aus den Gerätetypen der Endpunkte; Geräte mit unbekanntem Typ landen in „Sonstige“. Beides wurde nur mit simulierten Daten geprüft.
 - **Schreibende Matter-Befehle sind ungeprüft:** das Format von `set_acl_entry`/`set_node_binding` (Bindings), `commission_with_code`, `open_commissioning_window` und `remove_matter_fabric` kann je nach Matter-Server-Version abweichen. Dann bleibt die Funktion wirkungslos oder meldet einen Fehler – lesende Funktionen sind davon nicht betroffen.
 - **Keine Gruppen:** Zigbee-Gruppen haben in Matter keine direkte Entsprechung für diese Oberfläche; die Kategorie heißt stattdessen „Fabrics“.
 - **Keine Gerätebilder:** Matter liefert keine Produktbilder, es werden Symbole nach Gerätetyp angezeigt.
@@ -185,7 +189,7 @@ Alle schreibenden Aktionen (Umbenennen, Entfernen, Firmware, Bindings, Fabrics, 
 
 ## Fehlerbehebung
 
-- **Karte nicht gefunden:** Browser-Cache leeren; unter Einstellungen → Dashboards → Ressourcen prüfen, ob `/matter_manager_files/…` vorhanden ist (im YAML-Modus manuell eintragen).
+- **Karte nicht gefunden:** Browser-Cache leeren; unter Einstellungen → Dashboards → Ressourcen prüfen, ob `/matter_manager/…` vorhanden ist (im YAML-Modus manuell eintragen).
 - **„Matter Server nicht verbunden“:** Adresse unter **Neu konfigurieren** prüfen. Die Verbindung wird automatisch neu aufgebaut; mit **Server → Wartung → Verbindung neu aufbauen** lässt sie sich sofort erzwingen.
 - **„Matter-Server-Version zu alt“:** Matter Server aktualisieren (API-Schema 8 oder neuer).
 - **Kein Signalwert:** Nur WLAN- und Thread-Geräte melden ihn; manche Geräte liefern ihn nicht.
@@ -196,7 +200,8 @@ Alle schreibenden Aktionen (Umbenennen, Entfernen, Firmware, Bindings, Fabrics, 
 
 | Version | Änderung |
 |---|---|
-| **1.0.1** | Erste Veröffentlichung auf GitHub: neues Icon und Logo, Niederländisch (Integration und Karte), README in drei Sprachen |
+| **1.0.2** | Ressourcenpfad der Karte korrigiert: `/matter_manager/matter-manager-card.js` statt `/matter_manager_files/…` (bestehende Einträge werden automatisch umgestellt). Hersteller und Gerätename werden aus der Typenbezeichnung gelesen. Neu: Filter und Gruppieren (Hersteller, Gerätename, Geräteklasse) wie im Zigbee2MQTT Manager. Französisch (Pull Request #1) |
+| 1.0.1 | Erste Veröffentlichung auf GitHub: neues Icon und Logo, Niederländisch (Integration und Karte), README in drei Sprachen |
 | 1.0.0 | Interner Stand vor der Veröffentlichung |
 
 ## Datei-Integrität (Hash-Kommentare)
@@ -208,12 +213,13 @@ JSON-Dateien haben keine Kommentare. Ihre SHA-256-Hashes (über die komplette Da
 | Datei | SHA-256 |
 |---|---|
 | `hacs.json` | `e719b176c5b44ea120e0d895d0719225612e43ab3ca6f462f98793383909ff5a` |
-| `custom_components/matter_manager/manifest.json` | `3dee98b3f4e9306c8e6621eda4309f681123a279a387c2f1a9e719a210ed86de` |
+| `custom_components/matter_manager/manifest.json` | `4146283815cafdeda9cdca58461f7912a6f597e97fc9f76c80d0d1e85c74569e` |
 | `custom_components/matter_manager/strings.json` | `aa57065c0ddee70f88cf5cab0b42d4a01f0f72fc9faab7571e9c1493562a4f73` |
 | `custom_components/matter_manager/icons.json` | `6737652d58ff71ed9df9eecfde362f6a0f62d7b2b7243d985e1f06020e3c9eb5` |
 | `custom_components/matter_manager/translations/de.json` | `aa57065c0ddee70f88cf5cab0b42d4a01f0f72fc9faab7571e9c1493562a4f73` |
 | `custom_components/matter_manager/translations/en.json` | `9c457f38c2a7650a00908d6601906a34655facc5540e2ba516dfc2c0a047c3f6` |
 | `custom_components/matter_manager/translations/nl.json` | `3d9ee90c1cac32673507fc2a6a9f74f6bc585e91359d8f4a7b1b6d36ca2e2218` |
+| `custom_components/matter_manager/translations/fr.json` | `716c55a3e6d3eebb67ebcd9efa56483b4dfe12b92fe32f6050f800ef680469d5` |
 
 ## Lizenz
 

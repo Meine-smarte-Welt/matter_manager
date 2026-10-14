@@ -1,4 +1,4 @@
-[🇩🇪 Deutsch](README.md) · [🇬🇧 English](README.en.md) · 🇳🇱 Nederlands
+[🇩🇪 Deutsch](README.md) · [🇬🇧 English](README.en.md) · 🇳🇱 Nederlands · [🇫🇷 Français](README.fr.md)
 
 # Matter Manager voor Home Assistant
 
@@ -28,7 +28,7 @@ De kaart heeft zes categorieën in een pictogrammenbalk (onder ca. 480 px kaartb
 
 | Categorie | Wat het kan |
 |---|---|
-| **Apparaten** | Lijst met bereikbaarheid, model, fabrikant, signaalsterkte (dBm), batterij, „laatst gezien”; statistiekchips als filter (offline / batterij bijna leeg / updates); zoeken; sorteren; „Apparaat toevoegen” |
+| **Apparaten** | Lijst met bereikbaarheid, model, fabrikant, signaalsterkte (dBm), batterij, „laatst gezien”; statistiekchips als filter (offline / batterij bijna leeg / updates); zoeken; sorteren; **filters** (status, voeding, signaal, netwerk, firmware, laatst gezien, ecosystemen, fabrikant, apparaatnaam, apparaatklasse) en **groeperen** op fabrikant, apparaatnaam of apparaatklasse; „Apparaat toevoegen” |
 | **Batterij** | Apparaten op batterij, laagste stand eerst; kleuren volgens de drempels voor bijna leeg en kritiek; apparaten zonder percentage tonen de laadstatus (OK/waarschuwing/kritiek) |
 | **Updates** | Geïnstalleerde vs. beschikbare firmware; „Alles controleren” en „Alles na elkaar installeren” als achtergrondtaak met voortgang en annuleren |
 | **Fabrics** | Ecosystemen (Apple Home, Google Home, Alexa, …) waarmee de apparaten verbonden zijn; verbinding met een extern ecosysteem verbreken |
@@ -45,7 +45,7 @@ Meer punten:
 - **Bevestiging met twee klikken** in plaats van een browserdialoog bij riskante acties (verwijderen, update, opnieuw verbinden, loskoppelen).
 - **Alleen-lezen:** `read_only: true` verbergt alle bedieningselementen die iets wijzigen (wandtablets).
 - **Zoom:** `zoom` schaalt de hele kaart.
-- **Talen:** Duits, Engels en Nederlands (integratie en kaart, volgens de taal van Home Assistant).
+- **Talen:** Duits, Engels, Nederlands en Frans (integratie en kaart, volgens de taal van Home Assistant).
 - **Diagnosedownload** met geanonimiseerde namen en ID's.
 
 ## Vereisten
@@ -65,7 +65,7 @@ Handmatig: kopieer de map `custom_components/matter_manager` naar `<config>/cust
 
 ## De kaart
 
-De integratie levert de kaart zelf en registreert hem als Lovelace-resource (blijvend, met `?v=<versie>` tegen verouderde browsercaches). Je hoeft niets handmatig toe te voegen. Draait Lovelace in YAML-modus, voeg dan `/matter_manager_files/matter-manager-card.js` toe als resource van het type `module`.
+De integratie levert de kaart zelf en registreert hem als Lovelace-resource (blijvend, met `?v=<versie>` tegen verouderde browsercaches). Je hoeft niets handmatig toe te voegen. Draait Lovelace in YAML-modus, voeg dan `/matter_manager/matter-manager-card.js` toe als resource van het type `module`. Heb je 1.0.1 in YAML-modus ingesteld, wijzig dan het oude pad `/matter_manager_files/…` naar dit pad.
 
 Kaart toevoegen: **Dashboard bewerken → Kaart toevoegen → „Matter Manager”**. De grafische editor groepeert alle instellingen in in- en uitklapbare secties (categorieën, weergave met kolommen, bewerken, kleuren). YAML is niet nodig, maar mogelijk:
 
@@ -85,6 +85,9 @@ zoom: 1
 show_stats: true
 show_search: true
 show_filter_bar: true         # sorteerkeuze
+show_group_by: true           # keuze „Groeperen”
+default_group_by: none        # none | vendor | model | class
+show_filters: true            # filtergedeelte (status, batterij, signaal, fabrikant, …)
 default_sort: name_asc        # name_asc | name_desc | battery_asc | signal_asc | last_seen_desc | last_seen_asc | ota
 show_model: true
 show_vendor: true
@@ -173,7 +176,8 @@ Alle schrijfacties (hernoemen, verwijderen, firmware, bindings, fabrics, apparaa
 
 ## Bekende beperkingen
 
-- **Versie 1.0.1 is niet op echte hardware getest.** Ontwikkeld is tegen de gedocumenteerde WebSocket-interface van python-matter-server en tegen een gesimuleerde server.
+- **Versie 1.0.2 is niet op echte hardware getest.** Ontwikkeld is tegen de gedocumenteerde WebSocket-interface van python-matter-server en tegen een gesimuleerde server.
+- **Fabrikant en apparaatnaam** komen uit de basisgegevens van het apparaat (fabrikantnaam en productnaam). Begint de productnaam met de fabrikantnaam, dan wordt die eraf gehaald; ontbreekt de fabrikant, dan wordt deze alleen herkend als een ander apparaat dezelfde fabrikantnaam meldt. Zonder deze gegevens verschijnt het apparaat onder „Onbekend”. De apparaatklasse komt uit de apparaattypen van de endpoints; apparaten met een onbekend type komen onder „Overig”. Beide zijn alleen met gesimuleerde gegevens gecontroleerd.
 - **Schrijvende Matter-commando's zijn ongetest:** het formaat van `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` en `remove_matter_fabric` kan per versie van de Matter Server verschillen. Dan heeft de functie geen effect of meldt hij een fout – lezende functies worden hierdoor niet beïnvloed.
 - **Geen groepen:** Zigbee-groepen hebben in Matter geen directe equivalent voor deze interface; de categorie heet daarom „Fabrics”.
 - **Geen apparaatafbeeldingen:** Matter levert geen productafbeeldingen, er worden pictogrammen per apparaattype getoond.
@@ -185,7 +189,7 @@ Alle schrijfacties (hernoemen, verwijderen, firmware, bindings, fabrics, apparaa
 
 ## Problemen oplossen
 
-- **Kaart niet gevonden:** browsercache wissen; controleer onder Instellingen → Dashboards → Resources of `/matter_manager_files/…` bestaat (in YAML-modus handmatig toevoegen).
+- **Kaart niet gevonden:** browsercache wissen; controleer onder Instellingen → Dashboards → Resources of `/matter_manager/…` bestaat (in YAML-modus handmatig toevoegen).
 - **„Matter Server niet verbonden”:** controleer het adres onder **Opnieuw configureren**. De verbinding wordt automatisch hersteld; met **Server → Onderhoud → Verbinding opnieuw opbouwen** forceer je dat direct.
 - **„Matter Server-versie te oud”:** werk de Matter Server bij (API-schema 8 of nieuwer).
 - **Geen signaalwaarde:** alleen wifi- en Thread-apparaten melden die; sommige apparaten leveren hem niet.
@@ -196,7 +200,8 @@ Alle schrijfacties (hernoemen, verwijderen, firmware, bindings, fabrics, apparaa
 
 | Versie | Wijziging |
 |---|---|
-| **1.0.1** | Eerste publicatie op GitHub: nieuw pictogram en logo, Nederlands (integratie en kaart), README in drie talen |
+| **1.0.2** | Resourcepad van de kaart gecorrigeerd: `/matter_manager/matter-manager-card.js` in plaats van `/matter_manager_files/…` (bestaande items worden automatisch omgezet). Fabrikant en apparaatnaam worden uit de typeaanduiding gelezen. Nieuw: filters en groeperen (fabrikant, apparaatnaam, apparaatklasse) zoals in de Zigbee2MQTT Manager. Frans (pull request #1) |
+| 1.0.1 | Eerste publicatie op GitHub: nieuw pictogram en logo, Nederlands (integratie en kaart), README in drie talen |
 | 1.0.0 | Interne stand vóór de publicatie |
 
 ## Bestandsintegriteit (hash-opmerkingen)

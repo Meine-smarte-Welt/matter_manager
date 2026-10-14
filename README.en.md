@@ -1,4 +1,4 @@
-[🇩🇪 Deutsch](README.md) · 🇬🇧 English · [🇳🇱 Nederlands](README.nl.md)
+[🇩🇪 Deutsch](README.md) · 🇬🇧 English · [🇳🇱 Nederlands](README.nl.md) · [🇫🇷 Français](README.fr.md)
 
 # Matter Manager for Home Assistant
 
@@ -28,7 +28,7 @@ The card has six categories in an icon bar (icons only below roughly 480 px card
 
 | Category | What it does |
 |---|---|
-| **Devices** | List with reachability, model, vendor, signal strength (dBm), battery, “last seen”; statistic chips as filters (offline / low battery / updates); search; sorting; “Add device” |
+| **Devices** | List with reachability, model, vendor, signal strength (dBm), battery, “last seen”; statistic chips as filters (offline / low battery / updates); search; sorting; **filters** (status, power, signal, network, firmware, last seen, ecosystems, manufacturer, device name, device class) and **grouping** by manufacturer, device name or device class; “Add device” |
 | **Battery** | Battery devices, lowest level first; colors by low and critical threshold; devices without a percentage show the charge state (OK/warning/critical) |
 | **Updates** | Installed vs. available firmware; “Check all” and “Install all one by one” as a background job with progress and cancel |
 | **Fabrics** | Ecosystems (Apple Home, Google Home, Alexa, …) the devices are connected to; remove the connection to a foreign ecosystem |
@@ -45,7 +45,7 @@ More points:
 - **Two-click confirmation** instead of a browser dialog for risky actions (remove, update, reconnect, unbind).
 - **Read only:** `read_only: true` hides all controls that change something (wall tablets).
 - **Zoom:** `zoom` scales the whole card.
-- **Languages:** German, English and Dutch (integration and card, following the Home Assistant language).
+- **Languages:** German, English, Dutch and French (integration and card, following the Home Assistant language).
 - **Diagnostics download** with anonymized names and IDs.
 
 ## Requirements
@@ -65,7 +65,7 @@ Manual: copy the folder `custom_components/matter_manager` to `<config>/custom_c
 
 ## The card
 
-The integration serves the card and registers it as a Lovelace resource (persisted, with `?v=<version>` against stale browser caches). You do not need to add anything manually. If Lovelace runs in YAML mode, add `/matter_manager_files/matter-manager-card.js` as a resource of type `module`.
+The integration serves the card and registers it as a Lovelace resource (persisted, with `?v=<version>` against stale browser caches). You do not need to add anything manually. If Lovelace runs in YAML mode, add `/matter_manager/matter-manager-card.js` as a resource of type `module`. If you set up 1.0.1 in YAML mode, change the old path `/matter_manager_files/…` to this one.
 
 Add the card: **Edit dashboard → Add card → “Matter Manager”**. The graphical editor groups all settings in collapsible sections (categories, appearance with columns, editing, colors). No YAML is required, but possible:
 
@@ -85,6 +85,9 @@ zoom: 1
 show_stats: true
 show_search: true
 show_filter_bar: true         # sort selection
+show_group_by: true           # “Group by” selection
+default_group_by: none        # none | vendor | model | class
+show_filters: true            # filter area (status, battery, signal, manufacturer, …)
 default_sort: name_asc        # name_asc | name_desc | battery_asc | signal_asc | last_seen_desc | last_seen_asc | ota
 show_model: true
 show_vendor: true
@@ -173,7 +176,8 @@ All write actions (rename, remove, firmware, bindings, fabrics, add device, reco
 
 ## Known limitations
 
-- **Version 1.0.1 has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
+- **Version 1.0.2 has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
+- **Manufacturer and device name** come from the device's basic data (vendor name and product name). If the product name starts with the manufacturer name, it is removed; if the manufacturer is missing, it is only detected when another device reports the same manufacturer name. Without these values the device appears under “Unknown”. The device class comes from the endpoints' device types; devices with an unknown type land in “Other”. Both were only checked with simulated data.
 - **Writing Matter commands are untested:** the format of `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` and `remove_matter_fabric` may differ depending on the Matter Server version. In that case the function has no effect or reports an error – read-only functions are not affected.
 - **No groups:** Zigbee groups have no direct Matter equivalent for this interface; the category is called “Fabrics” instead.
 - **No device images:** Matter does not provide product images, icons by device type are shown.
@@ -185,7 +189,7 @@ All write actions (rename, remove, firmware, bindings, fabrics, add device, reco
 
 ## Troubleshooting
 
-- **Card not found:** clear the browser cache; check under Settings → Dashboards → Resources whether `/matter_manager_files/…` exists (add manually in YAML mode).
+- **Card not found:** clear the browser cache; check under Settings → Dashboards → Resources whether `/matter_manager/…` exists (add manually in YAML mode).
 - **“Matter Server not connected”:** check the address under **Reconfigure**. The connection is re-established automatically; **Server → Maintenance → Reconnect** forces it immediately.
 - **“Matter Server version too old”:** update the Matter Server (API schema 8 or newer).
 - **No signal value:** only Wi-Fi and Thread devices report it; some devices do not provide it.
@@ -196,7 +200,8 @@ All write actions (rename, remove, firmware, bindings, fabrics, add device, reco
 
 | Version | Change |
 |---|---|
-| **1.0.1** | First release on GitHub: new icon and logo, Dutch (integration and card), README in three languages |
+| **1.0.2** | Card resource path corrected: `/matter_manager/matter-manager-card.js` instead of `/matter_manager_files/…` (existing entries are migrated automatically). Manufacturer and device name are read from the type designation. New: filters and grouping (manufacturer, device name, device class) as in the Zigbee2MQTT Manager. French (pull request #1) |
+| 1.0.1 | First release on GitHub: new icon and logo, Dutch (integration and card), README in three languages |
 | 1.0.0 | Internal state before the release |
 
 ## File integrity (hash comments)

@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 522f2111ee89253eb24707f9a75a9548c98d2388d710406f228073d1af7e6e50
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d0d6f25e8133e0fd912c79c3d98adc93b2d2ed04e984e17764ef49fb298ee589
 """Hält den Zustand des Matter Servers und sendet Befehle an Geräte."""
 
 from __future__ import annotations
@@ -355,6 +355,135 @@ def _icon_of(view: _NodeView, endpoints: Iterable[int]) -> str | None:
             if icon:
                 return icon
     return None
+
+
+# Geräte-Typ (Descriptor) -> Geräteklasse für Filter und Gruppierung
+_DEVICE_TYPE_CLASS: dict[int, str] = {
+    10: "lock",
+    14: "bridge",
+    15: "remote",
+    21: "sensor",
+    34: "media",
+    35: "media",
+    40: "media",
+    43: "fan",
+    44: "appliance",
+    45: "fan",
+    65: "sensor",
+    66: "other",
+    67: "sensor",
+    68: "sensor",
+    112: "appliance",
+    114: "climate",
+    115: "appliance",
+    116: "appliance",
+    117: "appliance",
+    118: "sensor",
+    256: "light",
+    257: "light",
+    258: "light",
+    259: "remote",
+    260: "remote",
+    261: "remote",
+    262: "sensor",
+    263: "sensor",
+    266: "switch",
+    267: "switch",
+    268: "light",
+    269: "light",
+    271: "switch",
+    272: "switch",
+    514: "cover",
+    515: "cover",
+    768: "climate",
+    769: "climate",
+    770: "sensor",
+    773: "sensor",
+    774: "sensor",
+    775: "sensor",
+}
+
+_VENDOR_SUFFIX_RE = re.compile(
+    r"[\s,]+(?:b\.?v\.?|gmbh|inc\.?|ltd\.?|llc|co\.?|ag|s\.?a\.?|corp\.?|corporation|limited)$",
+    re.IGNORECASE,
+)
+_LEADING_SUFFIX_RE = re.compile(
+    r"^(?:b\.?v\.?|gmbh|inc\.?|ltd\.?|llc|co\.?|ag|corp\.?|corporation|limited)[\s,]+",
+    re.IGNORECASE,
+)
+_NAME_SEPARATORS = " -_:/,"
+
+
+def _class_of(view: _NodeView, endpoints: Iterable[int], is_bridge: bool) -> str:
+    """Geräteklasse (light, switch, sensor, …) aus den Geräte-Typen der Endpunkte."""
+    for ep in sorted(endpoints):
+        if ep == 0:
+            continue
+        for entry in _as_list(view.get(ep, C_DESCRIPTOR, 0)):
+            cls = _DEVICE_TYPE_CLASS.get(_int(_field(entry, 0, "deviceType")) or -1)
+            if cls:
+                return cls
+    return "bridge" if is_bridge else "other"
+
+
+def _clean_vendor(name: str | None) -> str | None:
+    """Herstellername ohne Rechtsform (B.V., GmbH, Inc., Ltd. …) und ohne doppelte Leerzeichen."""
+    if not name:
+        return None
+    cleaned = re.sub(r"\s+", " ", name).strip(" ,.-")
+    previous = None
+    while previous != cleaned:
+        previous = cleaned
+        cleaned = _VENDOR_SUFFIX_RE.sub("", cleaned).strip(" ,.-")
+    return cleaned or None
+
+
+def _strip_vendor_prefix(model: str, vendor: str) -> str:
+    """Steht der Herstellername am Anfang der Typenbezeichnung, wird er entfernt."""
+    if len(model) > len(vendor) and model[: len(vendor)].lower() == vendor.lower():
+        if model[len(vendor)] in _NAME_SEPARATORS:
+            rest = model[len(vendor) :].lstrip(_NAME_SEPARATORS)
+            # Rechtsform, die hinter dem gekürzten Herstellernamen stehen blieb, ebenfalls entfernen
+            rest = _LEADING_SUFFIX_RE.sub("", rest) or rest
+            if rest:
+                return rest
+    return model
+
+
+def _split_type(vendor: str | None, model: str | None) -> tuple[str | None, str | None]:
+    """Typenbezeichnung in Hersteller und Gerätename trennen.
+
+    Der Hersteller kommt aus dem Basic-Information-Cluster (VendorName). Beginnt
+    die Typenbezeichnung (ProductName) mit dem Herstellernamen, wird er vom
+    Gerätenamen abgezogen, damit er nicht doppelt erscheint.
+    """
+    vendor = _clean_vendor(vendor)
+    if model:
+        model = re.sub(r"\s+", " ", model).strip() or None
+    if vendor and model:
+        model = _strip_vendor_prefix(model, vendor)
+    return vendor, model
+
+
+def _fill_missing_vendors(devices: list[dict[str, Any]]) -> None:
+    """Fehlt der Hersteller, wird er aus dem Anfang der Typenbezeichnung erkannt.
+
+    Es zählen nur Herstellernamen, die bei anderen Geräten desselben Servers
+    tatsächlich gemeldet wurden (nichts wird geraten).
+    """
+    known = sorted({d["vendor"] for d in devices if d.get("vendor")}, key=len, reverse=True)
+    if not known:
+        return
+    for device in devices:
+        model = device.get("model")
+        if device.get("vendor") or not model:
+            continue
+        for vendor in known:
+            rest = _strip_vendor_prefix(model, vendor)
+            if rest != model:
+                device["vendor"] = vendor
+                device["model"] = rest
+                break
 
 
 def _norm_binding(entry: Any, default_fabric: int | None) -> dict[str, Any]:
@@ -844,6 +973,7 @@ class MatterManager:
         vendor = _str(view.get(0, C_BASIC, 1)) or _KNOWN_VENDORS.get(vendor_id or -1)
         product = _str(view.get(0, C_BASIC, 3))
         product_label = _str(view.get(0, C_BASIC, 14))
+        vendor, model_name = _split_type(vendor, product or product_label)
         sw_int = _int(view.get(0, C_BASIC, 9))
         sw_string = _str(view.get(0, C_BASIC, 10)) or (
             str(sw_int) if sw_int is not None else None
@@ -886,7 +1016,8 @@ class MatterManager:
             "bridged_count": len(view.bridged),
             "vendor": vendor,
             "vendor_id": vendor_id,
-            "model": product or product_label,
+            "model": model_name,
+            "device_class": _class_of(view, view.owned, is_bridge),
             "description": product_label if product_label != product else None,
             "product_id": _int(view.get(0, C_BASIC, 4)),
             "node_label": _str(view.get(0, C_BASIC, 5)),
@@ -928,6 +1059,7 @@ class MatterManager:
             b_product = _str(view.get(ep, C_BRIDGED, 3))
             b_label = _str(view.get(ep, C_BRIDGED, 5))
             b_plabel = _str(view.get(ep, C_BRIDGED, 14))
+            b_vendor, b_model = _split_type(b_vendor, b_product or b_plabel)
             ha_name = self._registry_name(registry.get(node_id, {}).get(ep, []))
             result.append(
                 {
@@ -941,7 +1073,8 @@ class MatterManager:
                     "bridged_count": 0,
                     "vendor": b_vendor,
                     "vendor_id": _int(view.get(ep, C_BRIDGED, 2)),
-                    "model": b_product or b_plabel,
+                    "model": b_model,
+                    "device_class": _class_of(view, parts, False),
                     "description": b_plabel if b_plabel != b_product else None,
                     "product_id": None,
                     "node_label": b_label,
@@ -1067,6 +1200,7 @@ class MatterManager:
         for node_id in sorted(self._nodes):
             devices.extend(self._serialize_node(node_id, self._nodes[node_id], names, registry))
         devices.sort(key=lambda d: (d["name"] or "").lower())
+        _fill_missing_vendors(devices)
 
         low_t = self.low_battery_threshold
         crit_t = self.critical_battery_threshold

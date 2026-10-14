@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): a672b9adfa797352a1e6cc5336020af12d00ac200e1084a6556a2a65fae7e7c6
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 16f08c286abb6861189c04a6060333f02bbf5183d36e04e31f253a19b9409d4a
 """Matter Manager – Verwaltung der Matter-Geräte direkt in Home Assistant."""
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from .const import (
     CARD_FILENAME,
     CARD_URL_BASE,
     DOMAIN,
+    LEGACY_CARD_URL_BASE,
     SERVICE_CHECK_UPDATES,
     SERVICE_COMMISSION,
 )
@@ -35,6 +36,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _CARD_DIR = Path(__file__).parent / "www"
 _CARD_STATIC_URL = f"{CARD_URL_BASE}/{CARD_FILENAME}"
+_LEGACY_STATIC_URL = f"{LEGACY_CARD_URL_BASE}/{CARD_FILENAME}"
 _FRONTEND_KEY = f"{DOMAIN}_frontend_registered"
 
 
@@ -101,20 +103,34 @@ async def _async_ensure_lovelace_resource(hass: HomeAssistant) -> None:
 
         integration = await async_get_integration(hass, DOMAIN)
         target_url = f"{_CARD_STATIC_URL}?v={integration.version}"
-        existing = next(
-            (
-                item
-                for item in resources.async_items()
-                if item.get("url", "").split("?", 1)[0] == _CARD_STATIC_URL
-            ),
-            None,
-        )
+        items = list(resources.async_items())
+
+        def _base(item: dict) -> str:
+            return str(item.get("url", "")).split("?", 1)[0]
+
+        existing = next((i for i in items if _base(i) == _CARD_STATIC_URL), None)
+        legacy = [i for i in items if _base(i) == _LEGACY_STATIC_URL]
+
+        if existing is None and legacy:
+            # Eintrag aus 1.0.1 (/matter_manager_files/...) auf den neuen Pfad umstellen
+            first, *rest = legacy
+            await resources.async_update_item(
+                first["id"], {"res_type": "module", "url": target_url}
+            )
+            for item in rest:
+                await resources.async_delete_item(item["id"])
+            _LOGGER.info("Lovelace-Ressource von %s auf %s umgestellt", _LEGACY_STATIC_URL, target_url)
+            return
+
         if existing is None:
             await resources.async_create_item({"res_type": "module", "url": target_url})
         elif existing.get("url") != target_url:
             await resources.async_update_item(
                 existing["id"], {"res_type": "module", "url": target_url}
             )
+        # Doppelte Altlast entfernen, falls neuer und alter Eintrag nebeneinander existieren
+        for item in legacy:
+            await resources.async_delete_item(item["id"])
     except Exception as err:  # noqa: BLE001 - darf das Setup nie verhindern
         _LOGGER.warning(
             "Konnte %s nicht automatisch als Lovelace-Ressource eintragen (%s) – "

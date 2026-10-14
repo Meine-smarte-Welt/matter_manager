@@ -1,0 +1,8 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8607b2571866f815d1f809d3c565f23a61b121f669d0200cee8dc0179625885c
+# Geräteliste nach Hersteller gruppiert, Filter-Bereich sichtbar
+type: custom:matter-manager-card
+title: Matter nach Hersteller
+default_tab: devices
+default_group_by: vendor   # none | vendor | model | class
+show_group_by: true
+show_filters: true

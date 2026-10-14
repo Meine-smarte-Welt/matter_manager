@@ -1,10 +1,10 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 7fbd997d22642011c29c405f0b036420a9c7e5beb7cf9c0a607375d6eadfc791
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 2467893ffd7f23976bb18a9aa79a8476bed9f09249033f4d8ced8a5d10f5087a
 """Konstanten für Matter Manager."""
 
 from datetime import timedelta
 
 DOMAIN = "matter_manager"
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 CONF_URL = "url"
 CONF_LOW_BATTERY = "low_battery_threshold"
@@ -18,7 +18,9 @@ DEFAULT_CRITICAL_BATTERY = 10
 DEFAULT_FIRE_EVENTS = True
 
 # Statische Auslieferung der Lovelace-Karte (Ordner "www")
-CARD_URL_BASE = "/matter_manager_files"
+CARD_URL_BASE = "/matter_manager"
+# Bis 1.0.1 wurde die Karte unter diesem Pfad ausgeliefert (wird beim Start migriert)
+LEGACY_CARD_URL_BASE = "/matter_manager_files"
 CARD_FILENAME = "matter-manager-card.js"
 
 # Zusammenfassung mehrerer schneller Matter-Nachrichten zu einem Push

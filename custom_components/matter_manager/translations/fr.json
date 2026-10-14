@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Matter Manager",
+        "description": "Connecte le gestionnaire à votre Matter Server (python-matter-server). L'adresse est reprise de l'intégration Matter lorsque c'est possible.",
+        "data": {
+          "url": "Adresse du Matter Server",
+          "low_battery_threshold": "Seuil pour « batterie faible » (%)"
+        },
+        "data_description": {
+          "url": "Adresse WebSocket, p. ex. ws://core-matter-server:5580/ws (module complémentaire Matter Server) ou ws://192.168.1.10:5580/ws."
+        }
+      },
+      "reconfigure": {
+        "title": "Modifier l'adresse du Matter Server",
+        "data": {
+          "url": "Adresse du Matter Server"
+        },
+        "data_description": {
+          "url": "Adresse WebSocket, p. ex. ws://core-matter-server:5580/ws."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Adresse non valide (ws://… ou wss://… attendu).",
+      "cannot_connect": "Impossible de se connecter au Matter Server. Est-il démarré et l'adresse est-elle correcte ?",
+      "not_matter_server": "L'adresse répond, mais pas comme un Matter Server."
+    },
+    "abort": {
+      "already_configured": "Une entrée existe déjà pour cette adresse.",
+      "reconfigure_successful": "L'adresse a été modifiée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matter Manager – Paramètres",
+        "description": "Version installée : **{version}**\n\n{update_info}",
+        "data": {
+          "low_battery_threshold": "Seuil pour « batterie faible » (%)",
+          "critical_battery_threshold": "Seuil pour « batterie critique » (%)",
+          "fire_events": "Déclencher les événements Home Assistant"
+        },
+        "data_description": {
+          "critical_battery_threshold": "Doit être inférieur ou égal au seuil « batterie faible ».",
+          "fire_events": "Déclenche p. ex. matter_manager_device_offline, _battery_low et _update_available – utilisables comme déclencheurs d'automatisation."
+        }
+      }
+    },
+    "error": {
+      "critical_above_low": "Le seuil critique ne doit pas dépasser le seuil « faible »."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices": {
+        "name": "Appareils"
+      },
+      "offline": {
+        "name": "Appareils hors ligne"
+      },
+      "low_battery": {
+        "name": "Appareils à batterie faible"
+      },
+      "critical_battery": {
+        "name": "Appareils à batterie critique"
+      },
+      "updates_available": {
+        "name": "Mises à jour de firmware disponibles"
+      },
+      "fabrics": {
+        "name": "Fabrics"
+      }
+    }
+  },
+  "services": {
+    "commission": {
+      "name": "Ajouter un appareil",
+      "description": "Met en service un appareil Matter avec son code d'installation (appairage).",
+      "fields": {
+        "entry_id": {
+          "name": "ID de l'entrée",
+          "description": "Nécessaire uniquement en présence de plusieurs instances."
+        },
+        "code": {
+          "name": "Code d'installation",
+          "description": "Texte QR (MT:…) ou code numérique (11 ou 21 chiffres)."
+        },
+        "network_only": {
+          "name": "Réseau uniquement",
+          "description": "Rechercher uniquement sur le réseau existant, pas via Bluetooth."
+        }
+      }
+    },
+    "check_updates": {
+      "name": "Rechercher des mises à jour de firmware",
+      "description": "Vérifie en arrière-plan les mises à jour de tous les appareils compatibles OTA.",
+      "fields": {
+        "entry_id": {
+          "name": "ID de l'entrée",
+          "description": "Nécessaire uniquement en présence de plusieurs instances."
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): adb75ebdb5ec0a227a078927ac6aef5d6b79f99b64a70277b0ae07f633e62abe
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): daeb79421689554b4a07e4a474df241e82744616d578b8f07a62fbafb8ba0149
 /**
  * matter-manager-card
  * -------------------
@@ -36,7 +36,7 @@
  * Kartentyp: custom:matter-manager-card
  */
 
-const CARD_VERSION = "1.0.1";
+const CARD_VERSION = "1.0.2";
 const RELEASES_URL = "https://github.com/Meine-smarte-Welt/matter_manager/releases";
 
 const TAB_ORDER = ["devices", "battery", "updates", "fabrics", "bindings", "bridge"];
@@ -65,6 +65,56 @@ const DEFAULT_SORT = "name_asc";
 const TAB_DEFAULT_SORT = { battery: "battery_asc", updates: "ota" };
 
 const OTA_ORDER = { updating: 0, available: 1, scheduled: 2, idle: 3 };
+
+// --- Gruppieren und Filtern (seit 1.0.2) --------------------------------------
+// Tabs mit Geräteliste, auf die Gruppierung und Filter wirken.
+const FILTER_TABS = ["devices", "battery", "updates"];
+const GROUP_BY_OPTIONS = [
+  { value: "none", label: "group_none" },
+  { value: "vendor", label: "group_vendor" },
+  { value: "model", label: "group_model" },
+  { value: "class", label: "group_class" },
+];
+// Die Klasse leitet das Backend aus den Geräte-Typen der Endpunkte ab (Reihenfolge = Anzeige).
+const DEVICE_CLASSES = ["light", "switch", "climate", "cover", "lock", "fan", "remote", "sensor", "appliance", "media", "bridge", "other"];
+const CLASS_ICON = {
+  light: "mdi:lightbulb-outline",
+  switch: "mdi:power-socket-eu",
+  climate: "mdi:thermostat",
+  cover: "mdi:window-shutter",
+  lock: "mdi:lock-outline",
+  fan: "mdi:fan",
+  remote: "mdi:remote",
+  sensor: "mdi:eye-outline",
+  appliance: "mdi:washing-machine",
+  media: "mdi:television-play",
+  bridge: "mdi:bridge",
+  other: "mdi:help-circle-outline",
+};
+const UNKNOWN_VENDOR = "__unknown__";
+// Feste Filter (Auswahl: Wert -> Textschlüssel). Hersteller, Gerätename und Klasse werden aus den Daten gebildet.
+const FILTER_FIELDS = [
+  { key: "status", label: "flt_status", options: [["online", "flt_online"], ["offline", "flt_offline"]] },
+  {
+    key: "power",
+    label: "flt_power",
+    options: [["battery", "flt_battery_only"], ["mains", "flt_mains_only"], ["low", "flt_battery_low"]],
+  },
+  {
+    key: "signal",
+    label: "flt_signal",
+    options: [["good", "flt_sig_good"], ["mid", "flt_sig_mid"], ["weak", "flt_sig_weak"]],
+  },
+  {
+    key: "network",
+    label: "flt_network",
+    options: [["thread", "net_thread"], ["wifi", "net_wifi"], ["ethernet", "net_ethernet"], ["bridge", "type_Bridge"], ["bridged", "type_Bridged"]],
+  },
+  { key: "firmware", label: "flt_firmware", options: [["available", "flt_fw_available"]] },
+  { key: "seen", label: "flt_seen", options: [["24h", "flt_seen_24h"], ["7d", "flt_seen_7d"]] },
+  { key: "fabrics", label: "flt_fabrics", options: [["multi", "flt_fab_multi"], ["single", "flt_fab_single"]] },
+];
+const FILTER_KEYS = [...FILTER_FIELDS.map((f) => f.key), "vendor", "model", "class"];
 
 // Symbol nach Netzwerk-Rolle, wenn das Gerät kein eigenes Typ-Symbol mitbringt
 const DEVICE_ICON = {
@@ -134,6 +184,9 @@ const CONFIG_DEFAULTS = {
   show_search: true,
   show_filter_bar: true,
   default_sort: DEFAULT_SORT,
+  show_group_by: true,
+  default_group_by: "none",
+  show_filters: true,
   // Spalten der Geräteliste
   show_model: true,
   show_vendor: true,
@@ -261,6 +314,20 @@ const I18N = {
     type_Thread: "Thread", type_WiFi: "WLAN", type_Ethernet: "Ethernet", type_Bridge: "Bridge", type_Bridged: "Gerät hinter Bridge",
     net_thread: "Thread", net_wifi: "WLAN", net_ethernet: "Ethernet",
     battery_ok: "OK", battery_warning: "Warnung", battery_critical: "Kritisch", battery_replace: "Tausch nötig",
+    // Gruppieren und Filtern (seit 1.0.2)
+    group_by: "Gruppieren", group_none: "Keine Gruppierung", group_vendor: "Hersteller", group_model: "Gerätename", group_class: "Geräteklasse", group_unknown: "Unbekannt",
+    expand_all: "Alle aufklappen", collapse_all: "Alle zuklappen",
+    filters: "Filter", filter_active: "{n} aktiv", filter_reset: "Alle Filter zurücksetzen", filter_remove: "Filter entfernen",
+    flt_all: "Alle", flt_status: "Status", flt_online: "Online", flt_offline: "Offline",
+    flt_power: "Stromversorgung", flt_battery_only: "Nur Batteriegeräte", flt_mains_only: "Nur Netzbetrieb", flt_battery_low: "Batterie niedrig",
+    flt_signal: "Signal", flt_sig_good: "Gut (ab −70 dBm)", flt_sig_mid: "Mittel (−85 bis −71 dBm)", flt_sig_weak: "Schwach (unter −85 dBm)",
+    flt_network: "Netzwerk", flt_firmware: "Firmware", flt_fw_available: "Update verfügbar",
+    flt_seen: "Zuletzt gesehen", flt_seen_24h: "Vor mehr als 24 Stunden", flt_seen_7d: "Vor mehr als 7 Tagen",
+    flt_fabrics: "Ökosysteme", flt_fab_multi: "Mehrere Ökosysteme (Multi-Admin)", flt_fab_single: "Nur ein Ökosystem",
+    flt_vendor: "Hersteller", flt_model: "Gerätename", flt_class: "Geräteklasse",
+    flt_hint: "Mehrere Filter gelten gleichzeitig (UND). „Online/Offline“ kommt vom Matter Server. Die Filter gelten für Geräte, Batterie und Updates.",
+    cls_light: "Lampen", cls_switch: "Steckdosen & Schalter", cls_climate: "Heizung & Klima", cls_cover: "Rollos & Jalousien", cls_lock: "Schlösser",
+    cls_fan: "Lüfter", cls_remote: "Taster & Fernbedienungen", cls_sensor: "Sensoren", cls_appliance: "Haushaltsgeräte", cls_media: "Medien", cls_bridge: "Bridges", cls_other: "Sonstige",
   },
   en: {
     connecting: "Connecting …",
@@ -341,6 +408,20 @@ const I18N = {
     type_Thread: "Thread", type_WiFi: "Wi-Fi", type_Ethernet: "Ethernet", type_Bridge: "Bridge", type_Bridged: "Device behind bridge",
     net_thread: "Thread", net_wifi: "Wi-Fi", net_ethernet: "Ethernet",
     battery_ok: "OK", battery_warning: "Warning", battery_critical: "Critical", battery_replace: "Replace",
+    // Grouping and filtering (since 1.0.2)
+    group_by: "Group by", group_none: "No grouping", group_vendor: "Manufacturer", group_model: "Device name", group_class: "Device class", group_unknown: "Unknown",
+    expand_all: "Expand all", collapse_all: "Collapse all",
+    filters: "Filters", filter_active: "{n} active", filter_reset: "Reset all filters", filter_remove: "Remove filter",
+    flt_all: "All", flt_status: "Status", flt_online: "Online", flt_offline: "Offline",
+    flt_power: "Power source", flt_battery_only: "Battery devices only", flt_mains_only: "Mains-powered only", flt_battery_low: "Low battery",
+    flt_signal: "Signal", flt_sig_good: "Good (−70 dBm or better)", flt_sig_mid: "Medium (−85 to −71 dBm)", flt_sig_weak: "Weak (below −85 dBm)",
+    flt_network: "Network", flt_firmware: "Firmware", flt_fw_available: "Update available",
+    flt_seen: "Last seen", flt_seen_24h: "More than 24 hours ago", flt_seen_7d: "More than 7 days ago",
+    flt_fabrics: "Ecosystems", flt_fab_multi: "Several ecosystems (multi-admin)", flt_fab_single: "Only one ecosystem",
+    flt_vendor: "Manufacturer", flt_model: "Device name", flt_class: "Device class",
+    flt_hint: "Several filters apply together (AND). “Online/Offline” comes from the Matter Server. Filters apply to Devices, Battery and Updates.",
+    cls_light: "Lights", cls_switch: "Plugs & switches", cls_climate: "Heating & climate", cls_cover: "Blinds & covers", cls_lock: "Locks",
+    cls_fan: "Fans", cls_remote: "Buttons & remotes", cls_sensor: "Sensors", cls_appliance: "Appliances", cls_media: "Media", cls_bridge: "Bridges", cls_other: "Other",
   },
   nl: {
     connecting: "Verbinden …",
@@ -421,6 +502,114 @@ const I18N = {
     type_Thread: "Thread", type_WiFi: "Wifi", type_Ethernet: "Ethernet", type_Bridge: "Bridge", type_Bridged: "Apparaat achter bridge",
     net_thread: "Thread", net_wifi: "Wifi", net_ethernet: "Ethernet",
     battery_ok: "OK", battery_warning: "Waarschuwing", battery_critical: "Kritiek", battery_replace: "Vervangen",
+    // Groeperen en filteren (sinds 1.0.2)
+    group_by: "Groeperen", group_none: "Geen groepering", group_vendor: "Fabrikant", group_model: "Apparaatnaam", group_class: "Apparaatklasse", group_unknown: "Onbekend",
+    expand_all: "Alles uitklappen", collapse_all: "Alles inklappen",
+    filters: "Filters", filter_active: "{n} actief", filter_reset: "Alle filters wissen", filter_remove: "Filter verwijderen",
+    flt_all: "Alle", flt_status: "Status", flt_online: "Online", flt_offline: "Offline",
+    flt_power: "Voeding", flt_battery_only: "Alleen batterijapparaten", flt_mains_only: "Alleen netvoeding", flt_battery_low: "Batterij laag",
+    flt_signal: "Signaal", flt_sig_good: "Goed (vanaf −70 dBm)", flt_sig_mid: "Matig (−85 tot −71 dBm)", flt_sig_weak: "Zwak (onder −85 dBm)",
+    flt_network: "Netwerk", flt_firmware: "Firmware", flt_fw_available: "Update beschikbaar",
+    flt_seen: "Laatst gezien", flt_seen_24h: "Langer dan 24 uur geleden", flt_seen_7d: "Langer dan 7 dagen geleden",
+    flt_fabrics: "Ecosystemen", flt_fab_multi: "Meerdere ecosystemen (multi-admin)", flt_fab_single: "Slechts één ecosysteem",
+    flt_vendor: "Fabrikant", flt_model: "Apparaatnaam", flt_class: "Apparaatklasse",
+    flt_hint: "Meerdere filters gelden tegelijk (EN). “Online/Offline” komt van de Matter Server. De filters gelden voor Apparaten, Batterij en Updates.",
+    cls_light: "Lampen", cls_switch: "Stekkers & schakelaars", cls_climate: "Verwarming & klimaat", cls_cover: "Rolluiken & zonwering", cls_lock: "Sloten",
+    cls_fan: "Ventilatoren", cls_remote: "Knoppen & afstandsbedieningen", cls_sensor: "Sensoren", cls_appliance: "Huishoudapparaten", cls_media: "Media", cls_bridge: "Bridges", cls_other: "Overig",
+  },
+  fr: {
+    connecting: "Connexion …",
+    error_generic: "Échec de l'action.",
+    tab_devices: "Appareils", tab_battery: "Batterie", tab_updates: "Mises à jour",
+    tab_fabrics: "Fabrics", tab_bindings: "Bindings", tab_bridge: "Serveur",
+    chip_devices: "Appareils", chip_offline: "Hors ligne", chip_low_battery: "Batterie faible", chip_updates: "Mises à jour",
+    search: "Rechercher par nom, modèle ou Node-ID", sort: "Tri",
+    sort_name_asc: "Nom A–Z", sort_name_desc: "Nom Z–A", sort_battery_asc: "Batterie (la plus faible d'abord)",
+    sort_signal_asc: "Signal (le plus faible d'abord)", sort_last_seen_desc: "Vu pour la dernière fois (le plus récent d'abord)",
+    sort_last_seen_asc: "Vu pour la dernière fois (le plus ancien d'abord)", sort_ota: "Statut de mise à jour",
+    no_data: "Aucun appareil du Matter Server pour le moment. Un appareil est-il déjà configuré ?", no_results: "Aucun résultat.",
+    show_more: "Afficher {n} de plus",
+    status_online: "En ligne (selon le Matter Server)", status_offline: "Hors ligne (selon le Matter Server)", status_unknown: "Statut inconnu.",
+    offline: "hors ligne", online: "en ligne", unknown: "inconnu", inactive: "inactif", interviewing: "Interrogation", disabled: "désactivé",
+    never: "jamais", yes: "oui", no: "non", close: "Fermer", save: "Enregistrer", add: "Ajouter", cancel: "Annuler",
+    confirm: "Vraiment ?", loading: "Chargement …", details: "Détails", remove: "Supprimer l'appareil", rename: "Renommer",
+    set: "défini", not_set: "non défini", all: "tout",
+    bridge_error: "Aucune connexion à l'intégration", server_offline: "Matter Server non connecté",
+    server_offline_hint: "La connexion est rétablie automatiquement. Les valeurs affichées proviennent du dernier état connu.",
+    server_incompatible: "Version du Matter Server trop ancienne",
+    server_incompatible_hint: "Schéma d'API {v} détecté – au minimum {min} est requis. Veuillez mettre à jour le Matter Server.",
+    commission_running: "Ajout de l'appareil", commission_running_hint: "Cela peut prendre jusqu'à deux minutes. Veuillez laisser l'appareil à proximité.",
+    job_check: "Vérification du firmware en cours", job_update: "Installation des mises à jour de firmware",
+    check_all: "Rechercher les mises à jour pour tout", checking: "Vérification démarrée …", update_all: "Installer {n} mises à jour l'une après l'autre",
+    update_all_hint: "Les mises à jour sont lancées l'une après l'autre, jamais en parallèle. Les appareils sur batterie ne récupèrent souvent les mises à jour qu'après plusieurs heures. Les appareils doivent rester à portée.",
+    install: "Installer", check: "Rechercher une mise à jour", update_now: "Installer la mise à jour",
+    ota_available: "Mise à jour disponible", ota_updating: "Mise à jour en cours", ota_scheduled: "Planifiée", ota_idle: "À jour",
+    ota_unknown: "Non vérifiée", ota_unsupported: "Cet appareil ne prend pas en charge les mises à jour OTA.",
+    update_confirm: "L'appareil télécharge la mise à jour depuis le Matter Server, puis redémarre. Il doit rester alimenté et à portée.",
+    update_found: "Mise à jour disponible", no_update: "Aucune mise à jour disponible", done_update: "Mise à jour lancée",
+    release_notes: "Notes de version", f_checked_ota: "Dernière vérification",
+    fabrics_hint: "Les appareils Matter peuvent être connectés simultanément à plusieurs écosystèmes (multi-admin). Vous voyez ici à quel écosystème appartient chaque appareil et pouvez dissocier une connexion.",
+    no_fabrics: "Aucun fabric trouvé.", fabric_own: "Home Assistant (ce système)", fabric_unknown: "Écosystème inconnu",
+    fabric_remove: "Dissocier la connexion", fabric_own_badge: "ce système", done_fabric: "Connexion dissociée",
+    f_vendor_fabric: "Écosystème", f_fabric_id: "Fabric-ID", no_fabrics_device: "Aucune donnée de fabric disponible.",
+    sec_share: "Partager avec un autre écosystème", share_hint: "Ouvre une fenêtre d'appairage. Saisissez le code dans Apple Home, Google Home, Alexa ou une autre application Matter.",
+    share_open: "Ouvrir la fenêtre d'appairage", share_manual: "Code d'installation", share_qr: "Texte QR", share_valid: "valable {n} minutes", done_window: "Fenêtre d'appairage ouverte",
+    no_bindings: "Aucun binding.", no_bindings_device: "Aucun binding configuré.",
+    bindings_hint: "Les bindings relient directement les appareils (p. ex. bouton → lampe) et fonctionnent même sans Home Assistant.",
+    bind: "Relier", unbind: "Dissocier", bind_target: "Appareil cible", pick_target: "Veuillez choisir une cible.",
+    bind_endpoint: "Point de terminaison source", bind_clusters: "Fonctions",
+    bind_hint: "Sans sélection, toutes les fonctions compatibles sont reliées. L'appareil cible reçoit automatiquement l'autorisation d'accès nécessaire. Réveillez d'abord les appareils sur batterie en appuyant sur un bouton.",
+    done_bound: "Relié", done_unbound: "Liaison supprimée", bindings_bridged_hint: "Les bindings ne sont disponibles que pour les appareils directement sur le réseau.",
+    sec_app: "Version de l'application", f_integration_version: "Intégration", f_card_version: "Carte", f_latest_version: "Dernière version",
+    app_up_to_date: "À jour", app_update_available: "Mise à jour disponible : {v}", app_check_failed: "Vérification impossible (GitHub inaccessible)", app_not_checked: "pas encore vérifié",
+    f_checked: "Dernière vérification", app_check_now: "Vérifier maintenant", app_checking: "Recherche d'une nouvelle version …", app_release: "Voir la version",
+    app_update_hint: "Effectuez la mise à jour via HACS (intégration) et redémarrez Home Assistant. Rechargez ensuite le navigateur (Ctrl+F5).",
+    app_mismatch: "La carte ({card}) et l'intégration ({integration}) ont des versions différentes. Videz le cache du navigateur (Ctrl+F5) ou rechargez l'application.",
+    sec_status: "Matter Server", sec_commission: "Ajouter un appareil", sec_options: "Options du serveur", sec_maintenance: "Maintenance", sec_events: "Événements",
+    f_status: "Statut", f_sdk: "Matter-SDK", f_schema: "Schéma d'API", f_server_fabric: "Fabric-ID", f_compressed: "Fabric-ID compressé", f_url: "Adresse",
+    f_nodes: "Appareils (nodes)", f_wifi_creds: "Identifiants Wi-Fi", f_thread_creds: "Identifiants Thread", f_bluetooth: "Bluetooth",
+    commission_hint: "Saisissez le code d'installation de l'appareil (texte QR « MT:… » ou code à 11/21 chiffres). Pour les appareils Thread, les identifiants Thread doivent être définis dans le Matter Server.",
+    commission_code: "Code d'installation", commission_network_only: "Rechercher uniquement sur le réseau (pas de Bluetooth)", commission_start: "Ajouter un appareil",
+    pairing_start: "Ajouter un appareil", done_commission: "Appareil ajouté",
+    fabric_label: "Libellé pour les nouvelles connexions", fabric_label_hint: "Est enregistré sur les appareils comme nom du fabric Home Assistant lors des futurs appairages (32 caractères au maximum).",
+    done_fabric_label: "Libellé enregistré",
+    reconnect: "Reconnecter", reconnect_hint: "Coupe la connexion au Matter Server et la rétablit. Le Matter Server lui-même n'est pas redémarré.", done_reconnect: "Reconnexion en cours",
+    read_only_hint: "Cette carte est en lecture seule.", no_events: "Aucun événement depuis le démarrage.",
+    ev_device_joined: "Nouvel appareil", ev_device_leave: "Appareil supprimé",
+    ev_offline: "Hors ligne", ev_online: "De nouveau en ligne", ev_battery_low: "Batterie faible", ev_update_available: "Mise à jour disponible",
+    ev_server_connected: "Matter Server connecté", ev_server_disconnected: "Connexion au Matter Server perdue",
+    sec_info: "Informations", sec_fabrics: "Fabrics (multi-admin)", sec_firmware: "Firmware", sec_diag: "Diagnostic", sec_remove: "Supprimer l'appareil",
+    new_name: "Nouveau nom", rename_entities_hint: "Le renommage ajuste le nom de l'appareil dans Home Assistant. Les {n} entités conservent leurs ID :",
+    rename_hint: "Le nom est défini dans Home Assistant et – dans la mesure du possible – sur l'appareil lui-même.",
+    done_renamed: "Renommé",
+    remove_hint: "Supprime l'appareil de Home Assistant et du Matter Server. S'il est injoignable, il reste enregistré sur l'appareil et doit éventuellement être réinitialisé.",
+    done_removed: "Appareil supprimé",
+    ping: "Vérifier la disponibilité", interview: "Réinterroger l'appareil", done_interview: "Appareil réinterrogé",
+    ping_result: "Joignable : {n} sur {m} adresses", diag_hint: "« Réinterroger » relit toutes les propriétés de l'appareil (interview).",
+    bridged_hint: "Cet appareil est rattaché à un bridge et y est géré. Seul son nom dans Home Assistant peut être modifié ici.",
+    f_vendor: "Fabricant", f_model: "Modèle", f_description: "Description", f_type: "Type", f_network: "Réseau",
+    f_node_id: "Node-ID", f_endpoint: "Point de terminaison", f_bridge: "Bridge", f_sw: "Firmware", f_hw: "Matériel", f_part: "Numéro de pièce",
+    f_serial: "Numéro de série", f_signal: "Force du signal", f_battery: "Batterie", f_voltage: "Tension", f_available: "Joignable",
+    f_last_seen: "Vu pour la dernière fois", f_commissioned: "Configuré", f_thread_channel: "Canal Thread", f_thread_network: "Réseau Thread",
+    f_wifi_channel: "Canal Wi-Fi", f_ip: "Adresses IP", f_fabrics: "Fabrics",
+    type_Router: "Routeur Thread", type_Leader: "Leader Thread", type_EndDevice: "Terminal Thread", type_SleepyEndDevice: "Terminal Thread (en veille)",
+    type_Thread: "Thread", type_WiFi: "Wi-Fi", type_Ethernet: "Ethernet", type_Bridge: "Bridge", type_Bridged: "Appareil derrière un bridge",
+    net_thread: "Thread", net_wifi: "Wi-Fi", net_ethernet: "Ethernet",
+    battery_ok: "OK", battery_warning: "Avertissement", battery_critical: "Critique", battery_replace: "Remplacement nécessaire",
+    // Regroupement et filtres (depuis 1.0.2)
+    group_by: "Regrouper", group_none: "Aucun regroupement", group_vendor: "Fabricant", group_model: "Nom de l'appareil", group_class: "Classe d'appareil", group_unknown: "Inconnu",
+    expand_all: "Tout déplier", collapse_all: "Tout replier",
+    filters: "Filtres", filter_active: "{n} actif(s)", filter_reset: "Réinitialiser tous les filtres", filter_remove: "Supprimer le filtre",
+    flt_all: "Tous", flt_status: "Statut", flt_online: "En ligne", flt_offline: "Hors ligne",
+    flt_power: "Alimentation", flt_battery_only: "Appareils sur batterie uniquement", flt_mains_only: "Alimentation secteur uniquement", flt_battery_low: "Batterie faible",
+    flt_signal: "Signal", flt_sig_good: "Bon (à partir de −70 dBm)", flt_sig_mid: "Moyen (−85 à −71 dBm)", flt_sig_weak: "Faible (en dessous de −85 dBm)",
+    flt_network: "Réseau", flt_firmware: "Firmware", flt_fw_available: "Mise à jour disponible",
+    flt_seen: "Vu pour la dernière fois", flt_seen_24h: "Il y a plus de 24 heures", flt_seen_7d: "Il y a plus de 7 jours",
+    flt_fabrics: "Écosystèmes", flt_fab_multi: "Plusieurs écosystèmes (multi-admin)", flt_fab_single: "Un seul écosystème",
+    flt_vendor: "Fabricant", flt_model: "Nom de l'appareil", flt_class: "Classe d'appareil",
+    flt_hint: "Plusieurs filtres s'appliquent ensemble (ET). « En ligne/Hors ligne » provient du Matter Server. Les filtres s'appliquent aux appareils, à la batterie et aux mises à jour.",
+    cls_light: "Lampes", cls_switch: "Prises & interrupteurs", cls_climate: "Chauffage & climat", cls_cover: "Volets & stores", cls_lock: "Serrures",
+    cls_fan: "Ventilateurs", cls_remote: "Boutons & télécommandes", cls_sensor: "Capteurs", cls_appliance: "Électroménager", cls_media: "Média", cls_bridge: "Bridges", cls_other: "Autres",
   },
 };
 
@@ -507,6 +696,18 @@ const BASE_CARD_STYLES = `
     border-radius: 6px; padding: 5px 8px; box-sizing: border-box;
   }
   .filter-bar-field select { max-width: 170px; }
+  .flt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 12px; padding-top: 4px; }
+  .flt-field { display: flex; flex-direction: column; gap: 2px; font-size: 0.8em; color: var(--secondary-text-color, #727272); }
+  .flt-field select {
+    font: inherit; font-size: 1em; color: var(--primary-text-color, #212121); width: 100%;
+    background: var(--card-background-color, #fff); border: 1px solid var(--divider-color, #e0e0e0);
+    border-radius: 6px; padding: 5px 8px; box-sizing: border-box;
+  }
+  .group-list { display: flex; flex-direction: column; gap: 8px; }
+  .group-list .settings-accordion-body { padding-top: 0; }
+  .filters-wrap { margin-bottom: 8px; }
+  .fchips { padding: 0 0 8px; }
+  .fchips .chip { cursor: pointer; align-items: center; gap: 4px; --mdc-icon-size: 14px; }
   .filter-bar-field.grow { flex: 1 1 160px; }
   .filter-bar-field.grow input { flex: 1 1 auto; min-width: 0; }
 
@@ -676,6 +877,9 @@ class MatterManagerCard extends HTMLElement {
     this._tab = "devices";
     this._filter = "all";
     this._sort = {};
+    this._flt = {};
+    this._groupBy = null;
+    this._groupKeys = [];
     this._expanded = false;
     this._selected = null;
     this._drafts = {};
@@ -697,6 +901,9 @@ class MatterManagerCard extends HTMLElement {
     this._tab = visible.includes(this._config.default_tab) ? this._config.default_tab : visible[0] || "devices";
     this._filter = "all";
     this._sort = {};
+    this._flt = {};
+    this._groupBy = null;
+    this._groupKeys = [];
     this._expanded = false;
     if (!this._built) this._build();
     this._lastSig = null;
@@ -1127,6 +1334,8 @@ class MatterManagerCard extends HTMLElement {
       else if (this._filter === "updates") list = list.filter((d) => d.ota.state === "available");
     }
 
+    if (FILTER_TABS.includes(tab)) list = this._applyFilters(list);
+
     const q = this._search;
     if (q) {
       list = list.filter((d) =>
@@ -1160,9 +1369,142 @@ class MatterManagerCard extends HTMLElement {
     </div>`;
   }
 
+  _modelKey(d) {
+    return d.model ? `${d.vendor || ""}||${d.model}` : "";
+  }
+
+  _modelLabel(d) {
+    return d.model ? (d.vendor ? `${d.vendor} ${d.model}` : d.model) : this._t("group_unknown");
+  }
+
+  _applyFilters(list) {
+    const flt = this._flt || {};
+    const active = FILTER_KEYS.filter((k) => flt[k]);
+    if (!active.length) return list;
+    const now = Date.now();
+    return list.filter((d) =>
+      active.every((k) => {
+        const v = flt[k];
+        switch (k) {
+          case "status":
+            return v === "online" ? d.available === true : d.available === false;
+          case "power": {
+            const bat =
+              (d.battery !== null && d.battery !== undefined) ||
+              d.battery_present === true ||
+              (Boolean(d.battery_state) && d.battery_state !== "unknown");
+            if (v === "battery") return bat;
+            if (v === "mains") return !bat;
+            return d.battery_state === "low" || d.battery_state === "critical";
+          }
+          case "signal": {
+            const q = d.signal;
+            if (q === null || q === undefined) return false;
+            return v === "good" ? q >= -70 : v === "mid" ? q >= -85 && q < -70 : q < -85;
+          }
+          case "network":
+            if (v === "bridge") return Boolean(d.is_bridge);
+            if (v === "bridged") return Boolean(d.bridged);
+            return !d.bridged && d.network === v;
+          case "firmware":
+            return d.ota?.state === "available";
+          case "seen": {
+            const ts = d.last_seen ? Date.parse(d.last_seen) : NaN;
+            const limit = (v === "24h" ? 24 : 24 * 7) * 3600 * 1000;
+            return Number.isNaN(ts) || now - ts > limit;
+          }
+          case "fabrics":
+            return v === "multi" ? (d.fabrics_count || 0) > 1 : d.fabrics_count === 1;
+          case "vendor":
+            return v === UNKNOWN_VENDOR ? !d.vendor : d.vendor === v;
+          case "model":
+            return v === UNKNOWN_VENDOR ? !d.model : this._modelKey(d) === v;
+          case "class":
+            return (d.device_class || "other") === v;
+          default:
+            return true;
+        }
+      })
+    );
+  }
+
+  _groupMode() {
+    const g = this._groupBy ?? this._config.default_group_by;
+    return GROUP_BY_OPTIONS.some((o) => o.value === g) ? g : "none";
+  }
+
+  _fltOptionLabel(key, value) {
+    if (value === UNKNOWN_VENDOR) return this._t("group_unknown");
+    if (key === "vendor") return value;
+    if (key === "model") {
+      const d = (this._data?.devices || []).find((x) => this._modelKey(x) === value);
+      return d ? this._modelLabel(d) : value;
+    }
+    if (key === "class") return this._t(`cls_${value}`);
+    const field = FILTER_FIELDS.find((f) => f.key === key);
+    const opt = field?.options.find(([v]) => v === value);
+    return opt ? this._t(opt[1]) : value;
+  }
+
+  _fltLabelKey(k) {
+    return k === "vendor" ? "flt_vendor" : k === "model" ? "flt_model" : k === "class" ? "flt_class" : FILTER_FIELDS.find((f) => f.key === k).label;
+  }
+
+  _renderFilterPanel(tab) {
+    if (!this._config.show_filters || !FILTER_TABS.includes(tab)) return "";
+    const t = (k, v) => this._t(k, v);
+    const active = FILTER_KEYS.filter((k) => this._flt[k]);
+    const devices = this._data.devices;
+    const select = (key, label, options) => `<label class="flt-field"><span>${esc(label)}</span>
+        <select data-change="flt" data-flt="${key}" data-fk="flt:${key}"><option value="">${esc(t("flt_all"))}</option>${options
+          .map(([v, l]) => `<option value="${esc(v)}" ${this._flt[key] === v ? "selected" : ""}>${esc(l)}</option>`)
+          .join("")}</select></label>`;
+
+    const vendors = [...new Set(devices.map((d) => d.vendor).filter(Boolean))].sort((a, b) => a.localeCompare(b, this._lang));
+    const vendorOptions = vendors.map((v) => [v, v]);
+    if (devices.some((d) => !d.vendor)) vendorOptions.push([UNKNOWN_VENDOR, t("group_unknown")]);
+
+    const models = new Map();
+    for (const d of devices) if (d.model && !models.has(this._modelKey(d))) models.set(this._modelKey(d), this._modelLabel(d));
+    const modelOptions = [...models.entries()].sort((a, b) => a[1].localeCompare(b[1], this._lang));
+    if (devices.some((d) => !d.model)) modelOptions.push([UNKNOWN_VENDOR, t("group_unknown")]);
+
+    const classOptions = DEVICE_CLASSES.filter((c) => devices.some((d) => (d.device_class || "other") === c)).map((c) => [c, t(`cls_${c}`)]);
+
+    const fields = [
+      ...FILTER_FIELDS.map((f) => select(f.key, t(f.label), f.options.map(([v, l]) => [v, t(l)]))),
+      select("vendor", t("flt_vendor"), vendorOptions),
+      select("model", t("flt_model"), modelOptions),
+      select("class", t("flt_class"), classOptions),
+    ].join("");
+    const body = `<div class="flt-grid">${fields}</div>
+      <div class="hint">${esc(t("flt_hint"))}</div>
+      <div class="toolbar"><button class="btn small" data-act="flt_reset" ${active.length ? "" : "disabled"}>${esc(t("filter_reset"))}</button></div>`;
+    return `<div class="filters-wrap">${this._accordion("f:filters", "mdi:filter-variant", t("filters"), body, {
+      meta: active.length ? t("filter_active", { n: active.length }) : "",
+    })}</div>`;
+  }
+
+  // Aktive Filter als kleine Chips (Tippen entfernt den Filter), auch bei eingeklapptem Filter-Bereich
+  _renderActiveFilters(tab) {
+    if (!this._config.show_filters || !FILTER_TABS.includes(tab)) return "";
+    const active = FILTER_KEYS.filter((k) => this._flt[k]);
+    if (!active.length) return "";
+    const t = (k) => this._t(k);
+    return `<div class="chips fchips">${active
+      .map(
+        (k) =>
+          `<button class="chip on" data-act="flt_clear" data-flt="${k}" title="${esc(t("filter_remove"))}">${esc(t(this._fltLabelKey(k)))}: ${esc(
+            this._fltOptionLabel(k, this._flt[k])
+          )}<ha-icon icon="mdi:close"></ha-icon></button>`
+      )
+      .join("")}</div>`;
+  }
+
   _renderFilterBar(tab, withSort = true) {
     const cfg = this._config;
-    if (!cfg.show_search && !(cfg.show_filter_bar && withSort)) return "";
+    const canGroup = Boolean(cfg.show_group_by) && withSort && FILTER_TABS.includes(tab);
+    if (!cfg.show_search && !(cfg.show_filter_bar && withSort) && !canGroup) return "";
     const search = cfg.show_search
       ? `<label class="filter-bar-field grow"><ha-icon icon="mdi:magnify" style="--mdc-icon-size:18px"></ha-icon>
            <input type="search" data-draft="search" data-fk="search" data-rerender="1"
@@ -1174,7 +1516,19 @@ class MatterManagerCard extends HTMLElement {
              (o) => `<option value="${o.value}" ${o.value === this._sortKey(tab) ? "selected" : ""}>${esc(this._t(o.label))}</option>`
            ).join("")}</select></label>`
       : "";
-    return `<div class="filter-bar">${search}${sort}</div>`;
+    const mode = this._groupMode();
+    const group = canGroup
+      ? `<label class="filter-bar-field">${esc(this._t("group_by"))}
+           <select data-change="group_by" data-fk="group_by">${GROUP_BY_OPTIONS.map(
+             (o) => `<option value="${o.value}" ${o.value === mode ? "selected" : ""}>${esc(this._t(o.label))}</option>`
+           ).join("")}</select></label>`
+      : "";
+    const expand =
+      canGroup && mode !== "none"
+        ? `<span class="filter-bar-field"><button class="btn icon" data-act="grp_all" data-value="1" title="${esc(this._t("expand_all"))}" aria-label="${esc(this._t("expand_all"))}"><ha-icon icon="mdi:unfold-more-horizontal"></ha-icon></button>
+             <button class="btn icon" data-act="grp_all" data-value="0" title="${esc(this._t("collapse_all"))}" aria-label="${esc(this._t("collapse_all"))}"><ha-icon icon="mdi:unfold-less-horizontal"></ha-icon></button></span>`
+        : "";
+    return `<div class="filter-bar">${search}${sort}${group}${expand}</div>`;
   }
 
   _relTime(iso) {
@@ -1313,12 +1667,51 @@ class MatterManagerCard extends HTMLElement {
     if (!list.length) {
       return `<div class="empty">${esc(this._data.devices.length ? this._t("no_results") : this._t("no_data"))}</div>`;
     }
+    const mode = FILTER_TABS.includes(tab) ? this._groupMode() : "none";
+    if (mode !== "none") return this._renderGrouped(tab, list, mode);
     const { shown, hidden } = this._limited(list);
     return `<div class="rows">${shown.map((d) => this._deviceRow(d, tab)).join("")}</div>${
       hidden
         ? `<div class="more"><button class="btn" data-act="more">${esc(this._t("show_more", { n: hidden }))}</button></div>`
         : ""
     }`;
+  }
+
+  // Gruppierte Liste: je Hersteller, Gerätename bzw. Geräteklasse ein Akkordeon (max_rows gilt hier nicht)
+  _renderGrouped(tab, list, mode) {
+    const buckets = new Map();
+    for (const d of list) {
+      const k = mode === "vendor" ? d.vendor || "" : mode === "model" ? this._modelKey(d) : d.device_class || "other";
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push(d);
+    }
+    const keys = [...buckets.keys()];
+    if (mode === "class") {
+      const rank = (c) => (DEVICE_CLASSES.includes(c) ? DEVICE_CLASSES.indexOf(c) : DEVICE_CLASSES.length);
+      keys.sort((a, b) => rank(a) - rank(b));
+    } else {
+      const label = (k) => (mode === "model" ? this._modelLabel(buckets.get(k)[0]) : k);
+      keys.sort((a, b) => (a === "" ? 1 : b === "" ? -1 : label(a).localeCompare(label(b), this._lang)));
+    }
+    const openByDefault = keys.length <= 3 || Boolean(this._search);
+    this._groupKeys = [];
+    const html = keys
+      .map((k) => {
+        const items = buckets.get(k);
+        const off = items.filter((d) => d.available === false).length;
+        const meta = off ? `${items.length} · ${off} ${this._t("offline")}` : String(items.length);
+        const label =
+          mode === "vendor" ? k || this._t("group_unknown") : mode === "model" ? this._modelLabel(items[0]) : this._t(`cls_${k}`);
+        const icon = mode === "vendor" ? "mdi:factory" : mode === "model" ? items[0].icon || DEFAULT_DEVICE_ICON : CLASS_ICON[k] || CLASS_ICON.other;
+        const key = `g:${tab}:${mode}:${k}`;
+        this._groupKeys.push(key);
+        return this._accordion(key, icon, label, `<div class="rows">${items.map((d) => this._deviceRow(d, tab)).join("")}</div>`, {
+          meta,
+          open: openByDefault,
+        });
+      })
+      .join("");
+    return `<div class="group-list">${html}</div>`;
   }
 
   _renderDeviceTab(tab) {
@@ -1338,7 +1731,7 @@ class MatterManagerCard extends HTMLElement {
           </div>
           <div class="hint">${esc(this._t("update_all_hint"))}</div>`;
     }
-    return `${tab === "devices" ? this._renderStats() : ""}${toolbar}${this._renderFilterBar(tab)}${this._renderRowList(tab, this._devices(tab))}`;
+    return `${tab === "devices" ? this._renderStats() : ""}${toolbar}${this._renderFilterBar(tab)}${this._renderFilterPanel(tab)}${this._renderActiveFilters(tab)}${this._renderRowList(tab, this._devices(tab))}`;
   }
 
   // ----------------------------------------------------------------- Bausteine
@@ -1588,6 +1981,15 @@ class MatterManagerCard extends HTMLElement {
     if (t.dataset.change === "sort") {
       this._sort[t.dataset.tab] = t.value;
       this._refresh();
+    } else if (t.dataset.change === "group_by") {
+      this._groupBy = t.value;
+      this._expanded = false;
+      this._refresh();
+    } else if (t.dataset.change === "flt") {
+      if (t.value) this._flt[t.dataset.flt] = t.value;
+      else delete this._flt[t.dataset.flt];
+      this._expanded = false;
+      this._refresh();
     } else if (t.dataset.change === "bind_endpoint") {
       this._popupSig = null;
       this._renderPopup(true);
@@ -1618,6 +2020,17 @@ class MatterManagerCard extends HTMLElement {
         return this._refresh();
       case "more":
         this._expanded = true;
+        return this._refresh();
+      case "flt_reset":
+        this._flt = {};
+        this._expanded = false;
+        return this._refresh();
+      case "flt_clear":
+        delete this._flt[d.flt];
+        this._expanded = false;
+        return this._refresh();
+      case "grp_all":
+        for (const k of this._groupKeys || []) this._open[k] = d.value === "1";
         return this._refresh();
       case "open":
         return this._openPopup(d.id);
@@ -1964,6 +2377,9 @@ const EDITOR_LABELS = {
   show_search: "Suchfeld anzeigen",
   show_filter_bar: "Sortierung auf der Karte anzeigen",
   default_sort: "Standard-Sortierung der Geräteliste",
+  show_group_by: "Auswahl 'Gruppieren' anzeigen (Hersteller / Gerätename / Geräteklasse)",
+  default_group_by: "Standard-Gruppierung der Listen",
+  show_filters: "Filter-Bereich anzeigen (Status, Batterie, Signal, Hersteller, …)",
   show_model: "Modell anzeigen",
   show_vendor: "Hersteller anzeigen",
   show_node_id: "Node-ID anzeigen",
@@ -1978,6 +2394,7 @@ const EDITOR_HELPERS = {
   entry_id: "Leer lassen, wenn nur ein Matter-Manager-Eintrag eingerichtet ist.",
   title: "Leer lassen, um keine Überschrift anzuzeigen.",
   max_rows: "Bei gesetztem Wert erscheint unter der Liste 'Weitere anzeigen'.",
+  default_group_by: "Gilt für Geräte, Batterie und Updates. In der Karte lässt sich die Gruppierung jederzeit umstellen.",
   read_only: "Blendet Umbenennen, Firmware-Installation, Binding-/Fabric-Änderungen, Gerät hinzufügen, Entfernen und Neu verbinden aus. Zusätzlich sind Aktionen ohnehin Administratoren vorbehalten.",
 };
 
@@ -2042,6 +2459,17 @@ const EDITOR_SCHEMA = [
           },
         },
       },
+      bool("show_group_by"),
+      {
+        name: "default_group_by",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: GROUP_BY_OPTIONS.map((o) => ({ value: o.value, label: I18N.de[o.label] })),
+          },
+        },
+      },
+      bool("show_filters"),
       {
         name: "",
         type: "expandable",
