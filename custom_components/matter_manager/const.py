@@ -1,10 +1,10 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8e4d3da2468b23a6d8e9464f89af298f026e0cd61a0699f159e9f0b74b3fcd49
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 161f6212790d64437c66b76d59b6dd4ea7221df04eba38998f52a36d480227c8
 """Konstanten für Matter Manager."""
 
 from datetime import timedelta
 
 DOMAIN = "matter_manager"
-VERSION = "1.0.4b1"
+VERSION = "1.1.0"
 
 CONF_URL = "url"
 CONF_LOW_BATTERY = "low_battery_threshold"
@@ -42,6 +42,9 @@ COMMISSIONING_WINDOW_SECONDS = 300
 STORAGE_VERSION = 1
 STORAGE_SAVE_DELAY = 30
 MAX_EVENT_LOG = 50
+
+# Eigene Kommentare je Gerät (Zeichen)
+COMMENT_MAX_LENGTH = 1000
 
 # Mindest-Schema-Version der Matter-Server-API (Bindings, OTA und Fabrics)
 MIN_SCHEMA_VERSION = 8

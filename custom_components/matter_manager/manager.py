@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): ff6bd1ee86315a5c22e43c7d46ae72e4d27fb7177ba3ca4a5fcd9c09a605c497
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8a40cd3bb4f76b07e671c323f6c49bb7713ddd1a5afeec53d7c9c8a386687cff
 """Hält den Zustand des Matter Servers und sendet Befehle an Geräte."""
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from .const import (
     CONF_CRITICAL_BATTERY,
     CONF_FIRE_EVENTS,
     CONF_LOW_BATTERY,
+    COMMENT_MAX_LENGTH,
     CONF_URL,
     DEFAULT_CRITICAL_BATTERY,
     DEFAULT_FIRE_EVENTS,
@@ -207,6 +208,12 @@ def _int(value: Any) -> int | None:
     if isinstance(value, bool) or not isinstance(value, int):
         return None
     return value
+
+
+def _comment_node(key: str) -> int | None:
+    """Knoten-ID aus einem Kommentar-Schlüssel (\"5\" oder \"5:3\")."""
+    head = str(key).partition(":")[0]
+    return int(head) if head.isdigit() else None
 
 
 def _str(value: Any) -> str | None:
@@ -689,6 +696,8 @@ class MatterManager:
         self._vendor_names: dict[int, str] = {}
         self._vendors_requested: set[int] = set()
         self._node_names: dict[int, str] = {}
+        # Eigene Kommentare je Gerät (Schlüssel wie die Geräte-ID: "5" oder "5:3")
+        self._comments: dict[str, str] = {}
         self._seen_connected = False
 
         self._store: Store[dict[str, Any]] = Store(
@@ -767,6 +776,9 @@ class MatterManager:
             for key, value in (stored.get("updates") or {}).items():
                 if str(key).isdigit() and isinstance(value, dict):
                     self._updates[int(key)] = value
+            for key, value in (stored.get("comments") or {}).items():
+                if isinstance(key, str) and isinstance(value, str) and value.strip():
+                    self._comments[key] = value[:COMMENT_MAX_LENGTH]
 
         self._client_task = self.entry.async_create_background_task(
             self.hass, self.client.async_run(), f"{DOMAIN}_connection"
@@ -872,6 +884,11 @@ class MatterManager:
             },
             "updates": {
                 str(k): v for k, v in self._updates.items() if not keep or k in keep
+            },
+            "comments": {
+                k: v
+                for k, v in self._comments.items()
+                if not keep or _comment_node(k) in keep
             },
         }
 
@@ -983,7 +1000,17 @@ class MatterManager:
         if not fabric:
             return index
         prefix = f"deviceid_{fabric}-".lower()
-        for device in dr.async_get(self.hass).devices.values():
+        registry = dr.async_get(self.hass)
+        # Geräte über die Config-Einträge der Matter-Integration holen (kein Zugriff mehr
+        # auf registry.devices als Mapping; das entfällt in Home Assistant 2027.9)
+        matter_devices = [
+            device
+            for matter_entry in self.hass.config_entries.async_entries("matter")
+            for device in dr.async_entries_for_config_entry(
+                registry, matter_entry.entry_id
+            )
+        ]
+        for device in matter_devices:
             for identifier in device.identifiers:
                 # Neuere Home-Assistant-Versionen kennen auch Identifier mit mehr als
                 # zwei Werten; wir brauchen nur Domain und Kennung (die ersten zwei).
@@ -1208,6 +1235,7 @@ class MatterManager:
             "available": bool(node.get("available")) if "available" in node else None,
             "last_seen": self._last_msg.get(node_id),
             "commissioned": node.get("date_commissioned"),
+            "comment": self._comments.get(str(node_id), ""),
             "signal": _signal_of(view),
             "battery": battery["percent"],
             "voltage": battery["voltage"],
@@ -1270,6 +1298,7 @@ class MatterManager:
                     else (node_available or None),
                     "last_seen": self._last_msg.get(node_id),
                     "commissioned": None,
+                    "comment": self._comments.get(f"{node_id}:{ep}", ""),
                     "signal": None,
                     "battery": b_battery["percent"],
                     "voltage": b_battery["voltage"],
@@ -1638,6 +1667,23 @@ class MatterManager:
         elif not devices:
             raise ValueError("Kein Home-Assistant-Gerät zu diesem Matter-Gerät gefunden")
         self._schedule_update()
+
+    async def async_set_comment(self, device_id: Any, text: str) -> None:
+        """Kommentar zu einem Gerät speichern; ein leerer Text löscht ihn."""
+        node_id, endpoint = self._resolve(device_id)
+        key = str(node_id) if endpoint is None else f"{node_id}:{endpoint}"
+        text = (text or "").replace("\r\n", "\n").strip()
+        if len(text) > COMMENT_MAX_LENGTH:
+            raise ValueError(
+                f"Der Kommentar ist zu lang (höchstens {COMMENT_MAX_LENGTH} Zeichen)"
+            )
+        if text:
+            self._comments[key] = text
+        else:
+            self._comments.pop(key, None)
+        self._store.async_delay_save(self._cache_data, 1)
+        self._rebuild()
+        self._notify("update", self.data)
 
     async def async_remove(self, device_id: Any) -> None:
         node_id = self._require_node(device_id)

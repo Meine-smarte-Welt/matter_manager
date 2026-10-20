@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): a192b436ea4735f6ece406466e097f5b8a3b6d63a960b71552d5753387a9416a
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 68bb0191b9060155cf027b658b3527b409e8a9dc5eec02ea75a31a300aacb14b
 """Prüft auf GitHub, ob eine neuere Version der Integration veröffentlicht wurde."""
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ _HEADERS = {
     "Accept": "application/vnd.github+json",
     "User-Agent": "matter_manager",
 }
-# Vorabversionen sind kleiner als die fertige Version: 1.0.4b1 < 1.0.4rc1 < 1.0.4
+# Vorabversionen (alpha, beta, rc) sind kleiner als die fertige Version
 _PRE_RANK = {"alpha": 0, "a": 0, "beta": 1, "b": 1, "rc": 2, "c": 2}
 _FINAL_RANK = 3
 
@@ -51,7 +51,7 @@ def parse_version(text: Any) -> tuple[int, ...] | None:
 
 
 def is_prerelease(version: str | None) -> bool:
-    """True bei Beta-/RC-Versionen wie 1.0.4b1 oder 1.0.4rc1."""
+    """True bei Vorabversionen (Beta/RC)."""
     parsed = parse_version(version)
     return parsed is not None and parsed[4] < _FINAL_RANK
 

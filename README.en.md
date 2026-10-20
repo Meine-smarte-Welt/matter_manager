@@ -37,7 +37,7 @@ The card has seven categories in an icon bar (icons only below roughly 480 px ca
 | **Bindings** | Overview of all device links; unbind; re-bind in the device popup |
 | **Server** (gear) | **App version** (integration and card, with a colored notice for a new version), Matter Server status, add device (setup code), fabric label, reconnect, event log, Notification Center (optional) |
 
-**Device popup** (tap a row) with accordion sections: Information · Rename (with a list of the affected HA entities) · Firmware · Bindings · Functions · Entities (copy to the clipboard for automations and scripts) · Fabrics (incl. sharing with another ecosystem) · Diagnostics (check reachability, re-interview) · Remove.
+**Device popup** (tap a row) with accordion sections: Information · Comment (editable) · Rename (with a list of the affected HA entities) · Firmware · Bindings · Functions · Entities (copy to the clipboard for automations and scripts) · Fabrics (incl. sharing with another ecosystem) · Diagnostics (check reachability, re-interview) · Remove.
 
 More points:
 
@@ -45,6 +45,7 @@ More points:
 - **Devices behind bridges** (e.g. a Hue bridge) appear on their own; renaming and toggling functions are possible, firmware, bindings and fabrics stay locked.
 - **Device images:** A small device image appears next to each row and in the popup. Matter provides no product images, so the card tries image names built from part number, product name and model one after another against the image library of the Zigbee2MQTT project (`https://www.zigbee2mqtt.io/images/devices/<model>.png`). If everything fails, the icon by device type is shown. **Privacy:** your browser (not Home Assistant) requests images from `zigbee2mqtt.io` and thereby transmits the devices' part number or product name. With `show_images: false` nothing is requested; `image_base` points to your own server (e.g. `/local/devices`), `device_images` assigns custom image URLs to individual devices (YAML only).
 - **Functions and clipboard:** Switches are only toggled via the Matter commands "On"/"Off" of the OnOff cluster. Locks deliberately cannot be operated. In the popup, the button per entity (or "Copy all") copies the entity ID to the clipboard; if access is blocked (e.g. without HTTPS), a text field for manual copying appears.
+- **Comments:** The device popup has a “Comment” section for your own note (up to 1000 characters) that you can edit and delete at any time. It is stored in Home Assistant’s storage (not on the device), is searchable and is left out of the diagnostics download. Only administrators can change it; with `read_only: true` an existing comment is shown but not editable.
 - **Cache:** “last seen” and the update state survive a restart.
 - **Two-click confirmation** instead of a browser dialog for risky actions (remove, update, reconnect, unbind).
 - **Read only:** `read_only: true` hides all controls that change something (wall tablets).
@@ -196,8 +197,6 @@ The installed version is shown in three places: in the card under **Server (gear
 
 If the card and integration versions differ (stale browser cache), this is also marked in orange.
 
-If a **beta or RC version** is running (e.g. `1.0.4b1`), the query also considers pre-releases, because GitHub does not return them as the “latest release”. In HACS you only see pre-releases if you enable **Show beta versions** for the integration.
-
 ## Integration settings
 
 Under **Configure** (showing the installed version): “low battery” threshold, “critical battery” threshold (must be less than or equal) and events on/off. **Reconfigure** lets you change the Matter Server address.
@@ -206,13 +205,13 @@ The dialog also contains **Send messages to the Notification Center** (main swit
 
 ## Security
 
-All write actions (rename, remove, toggling functions, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes. Switching is limited to on/off of the OnOff cluster, the value must be a boolean and the device must be reachable; locks and all other functions are read-only. Image addresses from `device_images` and `image_base` are checked against unsafe schemes (e.g. `javascript:`).
+All write actions (rename, comments, remove, toggling functions, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name and comment length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes. Switching is limited to on/off of the OnOff cluster, the value must be a boolean and the device must be reachable; locks and all other functions are read-only. Image addresses from `device_images` and `image_base` are checked against unsafe schemes (e.g. `javascript:`).
 
 The Notification Center switches can only be changed over WebSocket by an **administrator**; the message type is checked against the list of known types. Messages contain only device names and values such as the battery level.
 
 ## Known limitations
 
-- **Version 1.0.4b1 is a pre-release (beta) and has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
+- **Version 1.1.0 has only been tested with simulated data and a simulated Matter server, not on real hardware.** It was developed against the documented WebSocket interface of python-matter-server.
 - **Notification Center:** The connection was only tested against a simulated event bus, not against a real Notification Center. The card and the integration dialog are translated into German, English, Dutch and French; for Spanish the integration only supplies the message texts to the Notification Center, the card then shows English.
 - **Manufacturer and device name** come from the device's basic data (vendor name and product name). If the product name starts with the manufacturer name, it is removed; if the manufacturer is missing, it is only detected when another device reports the same manufacturer name. Without these values the device appears under “Unknown”. The device class comes from the endpoints' device types; devices with an unknown type land in “Other”. Both were only checked with simulated data.
 - **Writing Matter commands are untested:** the format of `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` and `remove_matter_fabric` may differ depending on the Matter Server version. In that case the function has no effect or reports an error – read-only functions are not affected.
@@ -238,7 +237,7 @@ The Notification Center switches can only be changed over WebSocket by an **admi
 
 | Version | Change |
 |---|---|
-| **1.0.4b1** | **Pre-release (beta).** New: optional connection to the **Notification Center** (interface “schema 1” over the event bus): message types server unreachable, device offline, battery critical/low, firmware update, new/removed device; main switch and a switch per message type in the card (Server → Notification Center) and in the Configure dialog, sorted by urgency. The update check understands beta/RC versions and also considers pre-releases when a pre-release is installed. Tested only with simulated data, not against a real Notification Center and not on real hardware |
+| **1.1.0** | New: **comments** in the device popup (editable, searchable, changeable by administrators only); optional connection to the **Notification Center** (interface “schema 1” over the event bus): message types server unreachable, device offline, battery critical/low, firmware update, new/removed device; main switch and a switch per message type in the card (Server → Notification Center) and in the Configure dialog, sorted by urgency. Fixed: typing in the card’s input fields (e.g. “e” in the name field) no longer triggers Home Assistant keyboard shortcuts such as the entity search. Changed: the device registry is queried without `device_registry.devices`, which is removed in Home Assistant 2027.9. Tested only with simulated data, not against a real Notification Center and not on real hardware |
 | **1.0.3** | New: small device images (candidates from the Zigbee2MQTT image library, can be disabled, own image folder possible), category **Functions** with switchable on/off switches and measured values, device popup sections Functions and Entities with copy to clipboard. New keys `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Tested only with simulated data and in a headless browser, not on real hardware |
 | **1.0.2** | Card resource path corrected: `/matter_manager/matter-manager-card.js` instead of `/matter_manager_files/…` (existing entries are migrated automatically). Manufacturer and device name are read from the type designation. New: filters and grouping (manufacturer, device name, device class) as in the Zigbee2MQTT Manager. French (pull request #1) |
 | 1.0.1 | First release on GitHub: new icon and logo, Dutch (integration and card), README in three languages |

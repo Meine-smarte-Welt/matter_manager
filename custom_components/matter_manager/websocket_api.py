@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): df29536aa9dd0a4daeefd7a3fa5922df29fe2c41aba3fe401dfe7eec1c705761
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d0ed64bda4f5db340f68393f049a0e2c042a6abe784530c9dc9c2135b0b48bd4
 """WebSocket-API zwischen Lovelace-Karte und Integration."""
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ ACTIONS = [
     "remove",
     "ping",
     "interview",
+    "set_comment",
     # Funktionen (Expose): Ein/Aus-Schalter
     "set_function",
     # Firmware
@@ -162,6 +163,8 @@ async def ws_action(
             await manager.async_ping(device)
         elif action == "interview":
             await manager.async_interview(device)
+        elif action == "set_comment":
+            await manager.async_set_comment(device, str(value or ""))
         elif action == "set_function":
             await manager.async_set_function(device, msg.get("function"), value)
         elif action == "ota_check":

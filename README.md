@@ -37,7 +37,7 @@ Die Karte hat sieben Kategorien in einer Symbolleiste (unter ca. 480 px Kartenbr
 | **Bindings** | Übersicht aller Geräte-Verknüpfungen; Lösen; Neu verknüpfen im Geräte-Popup |
 | **Server** (Zahnrad) | **App-Version** (Integration und Karte, mit farbigem Hinweis bei einer neuen Version), Matter-Server-Status, Gerät hinzufügen (Setup-Code), Fabric-Bezeichnung, Neu verbinden, Ereignisprotokoll, Notification Center (optional) |
 
-**Geräte-Popup** (Tipp auf eine Zeile) mit Akkordeon-Abschnitten: Informationen · Umbenennen (mit Liste der betroffenen HA-Entitäten) · Firmware · Bindings · Funktionen · Entitäten (zum Kopieren in die Zwischenablage, für Automationen und Skripte) · Fabrics (inkl. Freigabe für ein weiteres Ökosystem) · Diagnose (Erreichbarkeit prüfen, neu abfragen) · Entfernen.
+**Geräte-Popup** (Tipp auf eine Zeile) mit Akkordeon-Abschnitten: Informationen · Kommentar (bearbeitbar) · Umbenennen (mit Liste der betroffenen HA-Entitäten) · Firmware · Bindings · Funktionen · Entitäten (zum Kopieren in die Zwischenablage, für Automationen und Skripte) · Fabrics (inkl. Freigabe für ein weiteres Ökosystem) · Diagnose (Erreichbarkeit prüfen, neu abfragen) · Entfernen.
 
 Weitere Punkte:
 
@@ -45,6 +45,7 @@ Weitere Punkte:
 - **Geräte hinter Bridges** (z. B. Hue-Bridge) erscheinen eigenständig; Name ändern und Funktionen schalten sind möglich, Firmware, Bindings und Fabrics bleiben gesperrt.
 - **Gerätebilder:** Neben jeder Zeile und im Popup erscheint ein kleines Gerätebild. Matter liefert keine Produktbilder; die Karte probiert deshalb nacheinander Bildnamen aus Teilenummer, Produktname und Modell gegen die Bildbibliothek des Zigbee2MQTT-Projekts (`https://www.zigbee2mqtt.io/images/devices/<Modell>.png`). Schlägt alles fehl, erscheint das Symbol nach Gerätetyp. **Datenschutz:** Der Browser fragt dabei bei `zigbee2mqtt.io` Bilder ab und übermittelt dorthin Teilenummer bzw. Produktname der Geräte (Dein Browser, nicht Home Assistant). Mit `show_images: false` wird nichts abgefragt; `image_base` zeigt auf einen eigenen Server (z. B. `/local/geraete`), `device_images` ordnet einzelnen Geräten eigene Bild-URLs zu (nur YAML).
 - **Funktionen und Zwischenablage:** Schalter werden nur über die Matter-Befehle „On“/„Off“ des OnOff-Clusters geschaltet. Schlösser lassen sich bewusst nicht bedienen. Im Popup kopiert die Schaltfläche pro Entität (oder „Alle kopieren“) die Entitäts-ID in die Zwischenablage; ist der Zugriff gesperrt (z. B. ohne HTTPS), erscheint ein Textfeld zum manuellen Kopieren.
+- **Kommentare:** Im Geräte-Popup gibt es einen Abschnitt „Kommentar“ für eine eigene Notiz (bis 1000 Zeichen), die sich jederzeit bearbeiten und löschen lässt. Sie wird im Home-Assistant-Speicher abgelegt (nicht im Gerät), ist über die Suche auffindbar und wird im Diagnose-Download nicht ausgegeben. Ändern dürfen nur Administratoren; mit `read_only: true` wird ein vorhandener Kommentar nur angezeigt.
 - **Zwischenspeicher:** „Zuletzt gesehen“ und der Update-Stand überleben einen Neustart.
 - **Zwei-Klick-Bestätigung** statt Browser-Dialog bei riskanten Aktionen (Entfernen, Update, Neu verbinden, Lösen).
 - **Nur lesen:** `read_only: true` blendet alle Bedienelemente zum Ändern aus (Wandtablets).
@@ -196,8 +197,6 @@ Die installierte Version steht an drei Stellen: in der Karte unter **Server (Zah
 
 Weichen Karten- und Integrationsversion voneinander ab (veralteter Browser-Cache), wird auch das orange markiert.
 
-Läuft eine **Beta- oder RC-Version** (z. B. `1.0.4b1`), berücksichtigt die Abfrage zusätzlich Pre-releases, denn GitHub liefert sie nicht als „neuestes Release“. In HACS siehst Du Pre-releases nur, wenn Du für die Integration **Beta-Versionen anzeigen** aktivierst.
-
 ## Einstellungen der Integration
 
 Unter **Konfigurieren** (mit Anzeige der installierten Version): Schwelle „Batterie niedrig“, Schwelle „Batterie kritisch“ (muss kleiner oder gleich sein) und Ereignisse an/aus. Über **Neu konfigurieren** lässt sich die Adresse des Matter Servers ändern.
@@ -206,13 +205,13 @@ Zusätzlich im Dialog: **Meldungen an das Notification Center senden** (Hauptsch
 
 ## Sicherheit
 
-Alle schreibenden Aktionen (Umbenennen, Entfernen, Schalten von Funktionen, Firmware, Bindings, Fabrics, Gerät hinzufügen, Neu verbinden, Versionsprüfung) und das Laden der Geräte-Details sind per WebSocket auf **Administratoren** beschränkt. Eingaben werden vom Backend geprüft (Setup-Code-Format, Namenslänge, bekannte Geräte, eigene Fabric nicht entfernbar). Beim Anlegen eines Bindings wird nur dann ein Zugriffseintrag (ACL) auf dem Zielgerät ergänzt, wenn dort bereits ein Administrator-Eintrag über CASE vorhanden ist, damit der Zugriff von Home Assistant nie verloren geht. Die Karte maskiert alle Texte; Farbwerte laufen durch eine Allowlist. Der angezeigte Setup-Code eines geöffneten Pairing-Fensters ist nur für Administratoren sichtbar und fünf Minuten gültig. Das Schalten ist auf Ein/Aus des OnOff-Clusters beschränkt, der Wert muss ein Wahrheitswert sein, das Gerät muss erreichbar sein; Schlösser und alle anderen Funktionen sind nur lesbar. Bildadressen aus `device_images` und `image_base` werden gegen unsichere Schemata (z. B. `javascript:`) geprüft.
+Alle schreibenden Aktionen (Umbenennen, Kommentare, Entfernen, Schalten von Funktionen, Firmware, Bindings, Fabrics, Gerät hinzufügen, Neu verbinden, Versionsprüfung) und das Laden der Geräte-Details sind per WebSocket auf **Administratoren** beschränkt. Eingaben werden vom Backend geprüft (Setup-Code-Format, Namens- und Kommentarlänge, bekannte Geräte, eigene Fabric nicht entfernbar). Beim Anlegen eines Bindings wird nur dann ein Zugriffseintrag (ACL) auf dem Zielgerät ergänzt, wenn dort bereits ein Administrator-Eintrag über CASE vorhanden ist, damit der Zugriff von Home Assistant nie verloren geht. Die Karte maskiert alle Texte; Farbwerte laufen durch eine Allowlist. Der angezeigte Setup-Code eines geöffneten Pairing-Fensters ist nur für Administratoren sichtbar und fünf Minuten gültig. Das Schalten ist auf Ein/Aus des OnOff-Clusters beschränkt, der Wert muss ein Wahrheitswert sein, das Gerät muss erreichbar sein; Schlösser und alle anderen Funktionen sind nur lesbar. Bildadressen aus `device_images` und `image_base` werden gegen unsichere Schemata (z. B. `javascript:`) geprüft.
 
 Die Schalter für das Notification Center lassen sich per WebSocket nur als **Administrator** ändern; die Meldungsart wird gegen die Liste der bekannten Arten geprüft. Meldungen enthalten nur Gerätenamen und Werte wie den Batteriestand.
 
 ## Bekannte Einschränkungen
 
-- **Version 1.0.4b1 ist eine Vorabversion (Beta) und wurde nicht an echter Hardware getestet.** Entwickelt wurde gegen die dokumentierte WebSocket-Schnittstelle des python-matter-server und gegen einen simulierten Server.
+- **Version 1.1.0 wurde nur mit simulierten Daten und einem simulierten Matter Server geprüft, nicht an echter Hardware.** Entwickelt wurde gegen die dokumentierte WebSocket-Schnittstelle des python-matter-server.
 - **Notification Center:** Die Anbindung ist nur gegen einen simulierten Ereignisbus geprüft, nicht gegen ein echtes Notification Center. Karte und Integration-Dialog sind in Deutsch, Englisch, Niederländisch und Französisch übersetzt; für Spanisch liefert die Integration nur die Meldungstexte im Notification Center, die Karte zeigt dann Englisch.
 - **Hersteller und Gerätename** stammen aus den Basisdaten des Geräts (Herstellername und Produktname). Beginnt der Produktname mit dem Herstellernamen, wird er abgezogen; fehlt der Hersteller, wird er nur erkannt, wenn ein anderes Gerät denselben Herstellernamen meldet. Ohne diese Angaben erscheint das Gerät unter „Unbekannt“. Die Geräteklasse kommt aus den Gerätetypen der Endpunkte; Geräte mit unbekanntem Typ landen in „Sonstige“. Beides wurde nur mit simulierten Daten geprüft.
 - **Schreibende Matter-Befehle sind ungeprüft:** das Format von `set_acl_entry`/`set_node_binding` (Bindings), `commission_with_code`, `open_commissioning_window` und `remove_matter_fabric` kann je nach Matter-Server-Version abweichen. Dann bleibt die Funktion wirkungslos oder meldet einen Fehler – lesende Funktionen sind davon nicht betroffen.
@@ -238,7 +237,7 @@ Die Schalter für das Notification Center lassen sich per WebSocket nur als **Ad
 
 | Version | Änderung |
 |---|---|
-| **1.0.4b1** | **Vorabversion (Beta).** Neu: optionale Anbindung an das **Notification Center** (Schnittstelle „Schema 1“ über den Ereignisbus): Meldungsarten Server nicht erreichbar, Gerät offline, Batterie kritisch/niedrig, Firmware-Update, neues/entferntes Gerät; Hauptschalter und Schalter je Meldungsart in der Karte (Server → Notification Center) und im Dialog Konfigurieren, nach Dringlichkeit sortiert. Die Update-Prüfung versteht Beta/RC-Versionen und berücksichtigt bei einer Vorabversion auch Pre-releases. Nur mit simulierten Daten geprüft, nicht gegen ein echtes Notification Center und nicht an echter Hardware |
+| **1.1.0** | Neu: **Kommentare** im Geräte-Popup (bearbeitbar, durchsuchbar, nur für Administratoren änderbar); optionale Anbindung an das **Notification Center** (Schnittstelle „Schema 1“ über den Ereignisbus): Meldungsarten Server nicht erreichbar, Gerät offline, Batterie kritisch/niedrig, Firmware-Update, neues/entferntes Gerät; Hauptschalter und Schalter je Meldungsart in der Karte (Server → Notification Center) und im Dialog Konfigurieren, nach Dringlichkeit sortiert. Behoben: Beim Tippen in Eingabefeldern der Karte (z. B. „e“ im Namensfeld) lösen die Tastenkürzel von Home Assistant, etwa die Entitätssuche, nicht mehr aus. Geändert: Die Geräte-Registry wird ohne `device_registry.devices` abgefragt, das ab Home Assistant 2027.9 entfällt. Nur mit simulierten Daten geprüft, nicht gegen ein echtes Notification Center und nicht an echter Hardware |
 | **1.0.3** | Neu: kleine Gerätebilder (Kandidaten aus der Zigbee2MQTT-Bildbibliothek, abschaltbar, eigener Bildordner möglich), Kategorie **Funktionen** mit schaltbaren Ein/Aus-Schaltern und Messwerten, im Geräte-Popup die Abschnitte Funktionen und Entitäten mit Kopieren in die Zwischenablage. Neue Schlüssel `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Nur mit simulierten Daten und im Headless-Browser geprüft, nicht an echter Hardware |
 | **1.0.2** | Ressourcenpfad der Karte korrigiert: `/matter_manager/matter-manager-card.js` statt `/matter_manager_files/…` (bestehende Einträge werden automatisch umgestellt). Hersteller und Gerätename werden aus der Typenbezeichnung gelesen. Neu: Filter und Gruppieren (Hersteller, Gerätename, Geräteklasse) wie im Zigbee2MQTT Manager. Französisch (Pull Request #1) |
 | 1.0.1 | Erste Veröffentlichung auf GitHub: neues Icon und Logo, Niederländisch (Integration und Karte), README in drei Sprachen |
@@ -253,7 +252,7 @@ JSON-Dateien haben keine Kommentare. Ihre SHA-256-Hashes (über die komplette Da
 | Datei | SHA-256 |
 |---|---|
 | `hacs.json` | `e719b176c5b44ea120e0d895d0719225612e43ab3ca6f462f98793383909ff5a` |
-| `custom_components/matter_manager/manifest.json` | `0c2ea17c34e1ab64c1e203cd3c126b4d7c9e490720c04d6ecf42a93bac8852e0` |
+| `custom_components/matter_manager/manifest.json` | `78026e39a42512c9fac2fad2878827c4c6d28cf1337262b224f52aabdacfd28d` |
 | `custom_components/matter_manager/strings.json` | `4e01f329df028416c3f0a01f1ffae7368696d5174ee79cf9a1df0913d7f84ef6` |
 | `custom_components/matter_manager/icons.json` | `6737652d58ff71ed9df9eecfde362f6a0f62d7b2b7243d985e1f06020e3c9eb5` |
 | `custom_components/matter_manager/translations/de.json` | `4e01f329df028416c3f0a01f1ffae7368696d5174ee79cf9a1df0913d7f84ef6` |

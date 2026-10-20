@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 23631da1d4dc8d63367c324005f3952480c9161045ced17375ce98b6b1f9f0b5
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 9ad8c1046ec16f8b68ea67d4a7eded52e37e232420415ffc23dc1e9fa2eb9b51
 /**
  * matter-manager-card
  * -------------------
@@ -40,7 +40,9 @@
  * Kartentyp: custom:matter-manager-card
  */
 
-const CARD_VERSION = "1.0.4b1";
+const CARD_VERSION = "1.1.0";
+// Höchstlänge eines Kommentars (muss zu COMMENT_MAX_LENGTH in const.py passen)
+const COMMENT_MAX = 1000;
 const RELEASES_URL = "https://github.com/Meine-smarte-Welt/matter_manager/releases";
 
 const TAB_ORDER = ["devices", "battery", "updates", "functions", "fabrics", "bindings", "bridge"];
@@ -350,6 +352,8 @@ const I18N = {
     new_name: "Neuer Name", rename_entities_hint: "Beim Umbenennen wird der Gerätename in Home Assistant angepasst. Die {n} Entitäten behalten ihre IDs:",
     rename_hint: "Der Name wird in Home Assistant und – soweit möglich – im Gerät selbst gesetzt.",
     done_renamed: "Umbenannt",
+    sec_comment: "Kommentar", comment_placeholder: "Eigene Notiz zu diesem Gerät …", comment_hint: "Wird in Home Assistant gespeichert (höchstens {n} Zeichen) und ist über die Suche auffindbar.",
+    comment_delete: "Kommentar löschen", done_comment: "Kommentar gespeichert", done_comment_deleted: "Kommentar gelöscht",
     remove_hint: "Entfernt das Gerät aus Home Assistant und vom Matter Server. Ist es nicht erreichbar, bleibt es auf dem Gerät eingetragen und muss ggf. zurückgesetzt werden.",
     done_removed: "Gerät entfernt",
     ping: "Erreichbarkeit prüfen", interview: "Gerät neu abfragen", done_interview: "Gerät neu abgefragt",
@@ -465,6 +469,8 @@ const I18N = {
     new_name: "New name", rename_entities_hint: "Renaming changes the device name in Home Assistant. The {n} entities keep their IDs:",
     rename_hint: "The name is set in Home Assistant and, where possible, on the device itself.",
     done_renamed: "Renamed",
+    sec_comment: "Comment", comment_placeholder: "Your own note on this device …", comment_hint: "Stored in Home Assistant (up to {n} characters) and searchable.",
+    comment_delete: "Delete comment", done_comment: "Comment saved", done_comment_deleted: "Comment deleted",
     remove_hint: "Removes the device from Home Assistant and the Matter Server. If it is unreachable it stays registered on the device and may need a reset.",
     done_removed: "Device removed",
     ping: "Check reachability", interview: "Re-interview device", done_interview: "Device re-interviewed",
@@ -580,6 +586,8 @@ const I18N = {
     new_name: "Nieuwe naam", rename_entities_hint: "Bij het hernoemen wordt de apparaatnaam in Home Assistant aangepast. De {n} entiteiten behouden hun ID's:",
     rename_hint: "De naam wordt in Home Assistant en – waar mogelijk – op het apparaat zelf ingesteld.",
     done_renamed: "Hernoemd",
+    sec_comment: "Opmerking", comment_placeholder: "Eigen notitie bij dit apparaat …", comment_hint: "Wordt opgeslagen in Home Assistant (maximaal {n} tekens) en is doorzoekbaar.",
+    comment_delete: "Opmerking verwijderen", done_comment: "Opmerking opgeslagen", done_comment_deleted: "Opmerking verwijderd",
     remove_hint: "Verwijdert het apparaat uit Home Assistant en van de Matter Server. Is het niet bereikbaar, dan blijft het op het apparaat geregistreerd en moet het eventueel worden gereset.",
     done_removed: "Apparaat verwijderd",
     ping: "Bereikbaarheid controleren", interview: "Apparaat opnieuw uitlezen", done_interview: "Apparaat opnieuw uitgelezen",
@@ -695,6 +703,8 @@ const I18N = {
     new_name: "Nouveau nom", rename_entities_hint: "Le renommage ajuste le nom de l'appareil dans Home Assistant. Les {n} entités conservent leurs ID :",
     rename_hint: "Le nom est défini dans Home Assistant et – dans la mesure du possible – sur l'appareil lui-même.",
     done_renamed: "Renommé",
+    sec_comment: "Commentaire", comment_placeholder: "Ta propre note sur cet appareil …", comment_hint: "Enregistré dans Home Assistant (jusqu'à {n} caractères) et interrogeable via la recherche.",
+    comment_delete: "Supprimer le commentaire", done_comment: "Commentaire enregistré", done_comment_deleted: "Commentaire supprimé",
     remove_hint: "Supprime l'appareil de Home Assistant et du Matter Server. S'il est injoignable, il reste enregistré sur l'appareil et doit éventuellement être réinitialisé.",
     done_removed: "Appareil supprimé",
     ping: "Vérifier la disponibilité", interview: "Réinterroger l'appareil", done_interview: "Appareil réinterrogé",
@@ -915,6 +925,8 @@ const BASE_CARD_STYLES = `
   .settings-value { font-weight: 500; text-align: right; word-break: break-word; }
   .field { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; }
   .field label { font-size: 0.85em; color: var(--primary-text-color, #212121); }
+  .comment-text { white-space: pre-wrap; overflow-wrap: anywhere; padding: 6px 0; }
+  .field textarea.comment-input { resize: vertical; min-height: 4.5em; }
   .field .help { font-size: 0.75em; color: var(--secondary-text-color, #727272); }
   .field.inline { flex-direction: row; align-items: center; gap: 8px; }
   .field-row { display: flex; gap: 8px; align-items: center; }
@@ -1319,7 +1331,22 @@ class MatterManagerCard extends HTMLElement {
     root.addEventListener("click", (e) => this._onClick(e));
     root.addEventListener("input", (e) => this._onInput(e));
     root.addEventListener("change", (e) => this._onChange(e));
+    // Tippen in Eingabefeldern der Karte darf keine Tastenkürzel von Home Assistant auslösen
+    // (z. B. „e“ = Entitätssuche, „c“ = Befehle, „d“ = Geräte, „a“ = Assist). Die Ereignisse
+    // werden im Shadow-DOM auf das Host-Element umgeleitet, sodass Home Assistant das
+    // Eingabefeld nicht erkennt. Darum hier stoppen, bevor sie nach außen gelangen.
+    const keepTyping = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const origin = e.composedPath?.()[0] ?? e.target;
+      const tag = origin?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || origin?.isContentEditable) {
+        e.stopPropagation();
+      }
+    };
+    root.addEventListener("keyup", keepTyping);
+    root.addEventListener("keypress", keepTyping);
     root.addEventListener("keydown", (e) => {
+      keepTyping(e);
       if (e.key === "Escape" && this._selected) this._closePopup();
       if ((e.key === "Enter" || e.key === " ") && e.target.matches?.(".row.clickable")) {
         e.preventDefault();
@@ -1533,7 +1560,7 @@ class MatterManagerCard extends HTMLElement {
     const q = this._search;
     if (q) {
       list = list.filter((d) =>
-        [d.name, d.vendor, d.model, d.description, d.node_id, d.bridge].some((v) => String(v ?? "").toLowerCase().includes(q))
+        [d.name, d.vendor, d.model, d.description, d.node_id, d.bridge, d.comment].some((v) => String(v ?? "").toLowerCase().includes(q))
       );
     }
 
@@ -2484,6 +2511,18 @@ class MatterManagerCard extends HTMLElement {
         if (label) await this._call("fabric_label", { value: label });
         return;
       }
+      case "save_comment":
+      case "delete_comment": {
+        const id = this._selected;
+        const value = d.act === "delete_comment" ? "" : String(this._draft(`comment:${id}`, "")).replace(/\r\n/g, "\n").trim();
+        if (await this._call("set_comment", { device: id, value })) {
+          delete this._drafts[`comment:${id}`];
+          this._toast(this._t(value ? "done_comment" : "done_comment_deleted"));
+          this._popupSig = null;
+          this._renderPopup(true);
+        }
+        return;
+      }
       case "rename": {
         const id = this._selected;
         const value = String(this._draft(`rename:${id}`, "")).trim();
@@ -2686,6 +2725,25 @@ class MatterManagerCard extends HTMLElement {
 
     if (d.bridged) sections.push(`<div class="hint">${esc(t("bridged_hint"))}</div>`);
     sections.push(this._accordion("p:info", "mdi:information-outline", t("sec_info"), this._infoLines(d, det), { open: true }));
+
+    // Eigener Kommentar (bearbeitbar; im Nur-Lesen-Modus nur Anzeige, wenn vorhanden)
+    if (!ro || d.comment) {
+      const body = ro
+        ? `<div class="comment-text">${esc(d.comment)}</div>`
+        : `<div class="field"><textarea class="comment-input" rows="4" maxlength="${COMMENT_MAX}" data-draft="comment:${esc(d.id)}" data-fk="comment" placeholder="${esc(t("comment_placeholder"))}">${esc(this._draft(`comment:${d.id}`, d.comment || ""))}</textarea>
+             <span class="help">${esc(t("comment_hint", { n: COMMENT_MAX }))}</span></div>
+           <div class="toolbar"><button class="btn primary small" data-act="save_comment">${esc(t("save"))}</button>${
+             d.comment
+               ? `<button class="btn small" data-act="delete_comment">${esc(t("comment_delete"))}</button>`
+               : ""
+           }</div>`;
+      sections.push(
+        this._accordion("p:comment", "mdi:comment-text-outline", t("sec_comment"), body, {
+          open: Boolean(d.comment),
+          meta: d.comment ? "✎" : "",
+        })
+      );
+    }
 
     if (d.functions?.length) {
       sections.push(this._accordion("p:functions", "mdi:format-list-bulleted", t("sec_functions"), this._functionsBody(d), { meta: String(d.functions.length) }));
