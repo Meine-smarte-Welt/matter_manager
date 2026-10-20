@@ -40,11 +40,15 @@
         "data": {
           "low_battery_threshold": "Schwelle für „Batterie niedrig“ (%)",
           "critical_battery_threshold": "Schwelle für „Batterie kritisch“ (%)",
-          "fire_events": "Home-Assistant-Ereignisse auslösen"
+          "fire_events": "Home-Assistant-Ereignisse auslösen",
+          "nc_enabled": "Meldungen an das Notification Center senden",
+          "nc_types": "Gesendete Meldungsarten"
         },
         "data_description": {
           "critical_battery_threshold": "Muss kleiner oder gleich der Schwelle für „Batterie niedrig“ sein.",
-          "fire_events": "Löst z. B. matter_manager_device_offline, _battery_low und _update_available aus – nutzbar als Automations-Auslöser."
+          "fire_events": "Löst z. B. matter_manager_device_offline, _battery_low und _update_available aus – nutzbar als Automations-Auslöser.",
+          "nc_enabled": "Wirkt nur, wenn das Notification Center installiert ist. Ohne es passiert nichts.",
+          "nc_types": "Nach Dringlichkeit sortiert. Abgewählte Arten werden nicht gesendet."
         }
       }
     },
@@ -101,6 +105,19 @@
           "name": "Eintrags-ID",
           "description": "Nur bei mehreren Instanzen nötig."
         }
+      }
+    }
+  },
+  "selector": {
+    "nc_types": {
+      "options": {
+        "server_offline": "Matter Server nicht erreichbar",
+        "battery_critical": "Batterie kritisch",
+        "device_offline": "Gerät offline",
+        "battery_low": "Batterie niedrig",
+        "update_available": "Firmware-Update verfügbar",
+        "device_joined": "Neues Gerät",
+        "device_left": "Gerät entfernt"
       }
     }
   }

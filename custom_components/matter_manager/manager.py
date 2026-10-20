@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 951f9b13ac5e6423950eb1c76318a9307000331da6d9bd30e281aa8a331df84b
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): ff6bd1ee86315a5c22e43c7d46ae72e4d27fb7177ba3ca4a5fcd9c09a605c497
 """Hält den Zustand des Matter Servers und sendet Befehle an Geräte."""
 
 from __future__ import annotations
@@ -50,7 +50,9 @@ from .const import (
     VERSION,
 )
 from .matter_client import MatterServerClient, MatterServerError
-from .update_check import async_fetch_latest, is_newer
+from .nc_catalog import NC_CATALOG, NC_ICON, NC_TYPE_KEYS
+from .notification_bridge import OPT_ENABLED, OPT_TYPES, NotificationBridge
+from .update_check import async_fetch_latest, is_newer, is_prerelease
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -718,6 +720,23 @@ class MatterManager:
         self.client = MatterServerClient(
             async_get_clientsession(hass), self.url, self._handle_event
         )
+
+        # Optionale Anbindung an das Notification Center (Schema 1)
+        self.nc = NotificationBridge(
+            hass,
+            entry,
+            source=DOMAIN,
+            name="Matter Manager",
+            version=VERSION,
+            icon=NC_ICON,
+            catalog=NC_CATALOG,
+        )
+        self.nc.set_state_provider(self._nc_active_state)
+        # None = Anbindung noch nicht gestartet (dann werden keine Meldungen erzeugt)
+        self._nc_prev: dict[str, dict[str, dict[str, Any]]] | None = None
+        self._nc_sent: dict[str, int] = {}
+        self._opts_sig = self._non_nc_options()
+
         self.data: dict[str, Any] = {}
         self.details: dict[str, list[str]] = {}
         self._rebuild()
@@ -775,6 +794,9 @@ class MatterManager:
         )
         # Beim Start und danach regelmäßig auf eine neue App-Version prüfen
         self._spawn(self.async_check_app_update(), "app_update_check")
+        # Notification Center: erst nach dem ersten erfolgreichen Datenabruf anmelden
+        self._rebuild()
+        self.nc.async_start()
 
     async def async_stop(self) -> None:
         for unsub in self._unsubs:
@@ -825,6 +847,7 @@ class MatterManager:
         previous = self.data
         self._rebuild()
         self._detect_changes()
+        self._nc_detect()
         if self.data != previous:
             self._notify("update", self.data)
         self._store.async_delay_save(self._cache_data, STORAGE_SAVE_DELAY)
@@ -909,6 +932,7 @@ class MatterManager:
             name = self._basic_name(node, node_id)
             self._log("device_joined", name)
             self._fire(EVENT_DEVICE_JOINED, {"name": name, "node_id": node_id})
+            self._nc_oneshot("device_joined", node_id, name)
         self._request_vendor_names()
         self._schedule_update()
 
@@ -922,6 +946,7 @@ class MatterManager:
         self._updates.pop(node_id, None)
         self._log("device_leave", name)
         self._fire(EVENT_DEVICE_LEFT, {"name": name, "node_id": node_id})
+        self._nc_oneshot("device_left", node_id, name)
         self._schedule_update()
 
     def _handle_attribute(self, payload: list[Any]) -> None:
@@ -1406,6 +1431,7 @@ class MatterManager:
             },
             "jobs": dict(self.jobs),
             "app": dict(self.app),
+            "nc": {**self.nc.snapshot(), "chosen": self._nc_current_options()[OPT_TYPES]},
             "events": list(self._events),
             "fabrics": fabrics,
             "devices": devices,
@@ -2139,6 +2165,157 @@ class MatterManager:
                     self._vendor_names[int(key)] = name
             self._schedule_update()
 
+    # ------------------------------------------------------------------
+    # Notification Center (optional, Schema 1)
+    # ------------------------------------------------------------------
+    def _non_nc_options(self) -> dict[str, Any]:
+        return {
+            k: v for k, v in self.entry.options.items() if k not in (OPT_ENABLED, OPT_TYPES)
+        }
+
+    def only_nc_options_changed(self) -> bool:
+        """True, wenn sich nur die Schalter des Notification Centers geändert haben."""
+        return self._non_nc_options() == self._opts_sig
+
+    @callback
+    def async_nc_options_changed(self) -> None:
+        self.nc.async_options_changed()
+        self._schedule_update()
+
+    def _nc_states(self) -> dict[str, dict[str, dict[str, Any]]]:
+        """Aktive Zustände je auflösbarer Meldungsart: {type: {key: {subject, placeholders}}}."""
+        states: dict[str, dict[str, dict[str, Any]]] = {
+            item["type"]: {} for item in NC_CATALOG if item.get("resolvable", True)
+        }
+        if self.server_online is False:
+            states["server_offline"]["server"] = {
+                "subject": {"id": "server", "name": "Matter Server", "kind": "system"},
+                "placeholders": {},
+            }
+        for d in self.data.get("devices", []):
+            name = d["name"] or f"Node {d['node_id']}"
+            did = str(d["id"])
+            subject = {"id": did, "name": name, "kind": "device"}
+            if d["available"] is False:
+                states["device_offline"][did] = {
+                    "subject": subject,
+                    "placeholders": {"name": name},
+                }
+            level = d.get("battery_state")
+            if level in ("low", "critical"):
+                battery = f"{d['battery']} %" if d.get("battery") is not None else "?"
+                states["battery_critical" if level == "critical" else "battery_low"][did] = {
+                    "subject": subject,
+                    "placeholders": {"name": name, "battery": battery},
+                }
+            if d["ota"]["state"] == "available":
+                states["update_available"][did] = {
+                    "subject": subject,
+                    "placeholders": {
+                        "name": name,
+                        "installed": d.get("sw_version") or "?",
+                        "latest": d["ota"].get("latest") or "?",
+                    },
+                }
+        return states
+
+    def _nc_active_state(self) -> dict[str, list[dict[str, Any]]]:
+        """Zustandsanbieter für Start, Ping und Optionsänderung (Ausgangszustand)."""
+        states = self._nc_states()
+        self._nc_prev = states
+        return {
+            type_: [{"key": key, **item} for key, item in items.items()]
+            for type_, items in states.items()
+        }
+
+    def _nc_send(self, type_: str, key: str, state: str, item: dict[str, Any]) -> None:
+        if state == "active" and self.nc.type_enabled(type_):
+            self._nc_sent[type_] = self._nc_sent.get(type_, 0) + 1
+        self.nc.report(
+            type_,
+            key,
+            state,
+            subject=item.get("subject"),
+            placeholders=item.get("placeholders"),
+        )
+
+    @callback
+    def _nc_detect(self) -> None:
+        """Zustandswechsel erkennen und als Meldung senden (je genau eine pro Wechsel)."""
+        previous = self._nc_prev
+        if previous is None:
+            return  # Anbindung noch nicht gestartet
+        current = self._nc_states()
+        if self.server_online is not True:
+            # Server offline: Gerätezustände sind unbekannt, nur der Serverzustand zählt
+            for type_ in current:
+                if type_ != "server_offline":
+                    current[type_] = previous.get(type_, {})
+        self._nc_prev = current
+        for type_, items in current.items():
+            old = previous.get(type_, {})
+            for key, item in items.items():
+                if key not in old:
+                    self._nc_send(type_, key, "active", item)
+            for key, item in old.items():
+                if key not in items:
+                    self._nc_send(type_, key, "resolved", item)
+
+    @callback
+    def _nc_oneshot(self, type_: str, node_id: int, name: str) -> None:
+        """Einzelereignis (neues/entferntes Gerät), nur nach dem Start der Anbindung."""
+        if self._nc_prev is None:
+            return
+        self._nc_send(
+            type_,
+            str(node_id),
+            "active",
+            {
+                "subject": {"id": str(node_id), "name": name, "kind": "device"},
+                "placeholders": {"name": name},
+            },
+        )
+
+    def _nc_current_options(self) -> dict[str, Any]:
+        chosen = self.entry.options.get(OPT_TYPES, {})
+        return {
+            OPT_ENABLED: bool(self.entry.options.get(OPT_ENABLED, True)),
+            OPT_TYPES: {
+                item["type"]: bool(chosen.get(item["type"], item.get("enabled_default", True)))
+                for item in NC_CATALOG
+            },
+        }
+
+    async def async_nc_set_master(self, enabled: Any) -> None:
+        if not isinstance(enabled, bool):
+            raise ValueError("Wert muss ein/aus sein")
+        current = self._nc_current_options()
+        current[OPT_ENABLED] = enabled
+        self.hass.config_entries.async_update_entry(
+            self.entry, options={**self.entry.options, **current}
+        )
+
+    async def async_nc_set_type(self, type_: Any, enabled: Any) -> None:
+        if type_ not in NC_TYPE_KEYS:
+            raise ValueError("Unbekannte Meldungsart")
+        if not isinstance(enabled, bool):
+            raise ValueError("Wert muss ein/aus sein")
+        current = self._nc_current_options()
+        current[OPT_TYPES][type_] = enabled
+        self.hass.config_entries.async_update_entry(
+            self.entry, options={**self.entry.options, **current}
+        )
+
+    def nc_diagnostics(self) -> dict[str, Any]:
+        """Nur Schalterstand und Anzahl gesendeter Meldungen – keine Namen oder Texte."""
+        snap = self.nc.snapshot()
+        return {
+            "available": snap["available"],
+            "enabled": snap["enabled"],
+            "types": {t["type"]: t["enabled"] for t in snap["types"]},
+            "sent": dict(self._nc_sent),
+        }
+
     # --- App-Version --------------------------------------------------
     @callback
     def _app_update_tick(self, _now: datetime) -> None:
@@ -2146,7 +2323,10 @@ class MatterManager:
 
     async def async_check_app_update(self) -> None:
         """Auf GitHub nach einer neueren Version der App suchen."""
-        latest = await async_fetch_latest(self.hass)
+        # Bei Beta/RC auch Pre-releases berücksichtigen ("releases/latest" liefert sie nicht)
+        latest = await async_fetch_latest(
+            self.hass, include_prereleases=is_prerelease(VERSION)
+        )
         checked = _now()
         if latest is None:
             self.app = {**self.app, "checked_at": checked, "check_failed": True}

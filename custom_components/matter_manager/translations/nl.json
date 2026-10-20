@@ -40,11 +40,15 @@
         "data": {
           "low_battery_threshold": "Drempel voor „batterij bijna leeg” (%)",
           "critical_battery_threshold": "Drempel voor „batterij kritiek” (%)",
-          "fire_events": "Home Assistant-gebeurtenissen activeren"
+          "fire_events": "Home Assistant-gebeurtenissen activeren",
+          "nc_enabled": "Meldingen naar het Notification Center sturen",
+          "nc_types": "Te verzenden meldingstypen"
         },
         "data_description": {
           "critical_battery_threshold": "Moet kleiner dan of gelijk aan de drempel voor „batterij bijna leeg” zijn.",
-          "fire_events": "Activeert o.a. matter_manager_device_offline, _battery_low en _update_available – bruikbaar als trigger voor automatiseringen."
+          "fire_events": "Activeert o.a. matter_manager_device_offline, _battery_low en _update_available – bruikbaar als trigger voor automatiseringen.",
+          "nc_enabled": "Werkt alleen als het Notification Center is geïnstalleerd. Zonder gebeurt er niets.",
+          "nc_types": "Gesorteerd op urgentie. Niet-geselecteerde typen worden niet verzonden."
         }
       }
     },
@@ -101,6 +105,19 @@
           "name": "Item-ID",
           "description": "Alleen nodig bij meerdere instanties."
         }
+      }
+    }
+  },
+  "selector": {
+    "nc_types": {
+      "options": {
+        "server_offline": "Matter Server niet bereikbaar",
+        "battery_critical": "Batterij kritiek",
+        "device_offline": "Apparaat offline",
+        "battery_low": "Batterij laag",
+        "update_available": "Firmware-update beschikbaar",
+        "device_joined": "Nieuw apparaat",
+        "device_left": "Apparaat verwijderd"
       }
     }
   }

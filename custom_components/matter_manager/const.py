@@ -1,10 +1,10 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d21a9fa91c021d047ec3be8f039f774d7b2edb94d9352b41e533819e95718925
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8e4d3da2468b23a6d8e9464f89af298f026e0cd61a0699f159e9f0b74b3fcd49
 """Konstanten für Matter Manager."""
 
 from datetime import timedelta
 
 DOMAIN = "matter_manager"
-VERSION = "1.0.3"
+VERSION = "1.0.4b1"
 
 CONF_URL = "url"
 CONF_LOW_BATTERY = "low_battery_threshold"
@@ -64,6 +64,7 @@ SERVICE_CHECK_UPDATES = "check_updates"
 # Prüfung auf neue Versionen der App (GitHub-Releases)
 GITHUB_REPO = "Meine-smarte-Welt/matter_manager"
 GITHUB_API_LATEST = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases?per_page=5"
 GITHUB_API_TAGS = f"https://api.github.com/repos/{GITHUB_REPO}/tags?per_page=30"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases"
 APP_UPDATE_CHECK_INTERVAL = timedelta(hours=12)

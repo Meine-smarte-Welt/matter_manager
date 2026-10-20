@@ -13,6 +13,7 @@ Manage Matter devices without leaving Home Assistant: devices, batteries, firmwa
 - [Colors](#colors)
 - [Services](#services)
 - [Events for automations](#events-for-automations)
+- [Notification Center (optional)](#notification-center-optional)
 - [Sensors](#sensors)
 - [Version display and update notice](#version-display-and-update-notice)
 - [Integration settings](#integration-settings)
@@ -34,7 +35,7 @@ The card has seven categories in an icon bar (icons only below roughly 480 px ca
 | **Functions** | Expose functions of all devices: **switches** (on/off) can be toggled directly in the card, plus values such as brightness, color temperature, temperature, humidity, pressure, illuminance (lx), occupancy, lock and cover state (read-only); filter (All / Switchable / On); a switch stays locked until the device reports back (no double click); not switchable on errors or for offline devices |
 | **Fabrics** | Ecosystems (Apple Home, Google Home, Alexa, …) the devices are connected to; remove the connection to a foreign ecosystem |
 | **Bindings** | Overview of all device links; unbind; re-bind in the device popup |
-| **Server** (gear) | **App version** (integration and card, with a colored notice for a new version), Matter Server status, add device (setup code), fabric label, reconnect, event log |
+| **Server** (gear) | **App version** (integration and card, with a colored notice for a new version), Matter Server status, add device (setup code), fabric label, reconnect, event log, Notification Center (optional) |
 
 **Device popup** (tap a row) with accordion sections: Information · Rename (with a list of the affected HA entities) · Firmware · Bindings · Functions · Entities (copy to the clipboard for automations and scripts) · Fabrics (incl. sharing with another ecosystem) · Diagnostics (check reachability, re-interview) · Remove.
 
@@ -162,6 +163,29 @@ actions:
       message: "{{ trigger.event.data.name }}: battery {{ trigger.event.data.battery }} %"
 ```
 
+## Notification Center (optional)
+
+Matter Manager can send messages to the separate **Notification Center**, which collects them, sorts them by urgency and delivers them. The connection is **optional**: without the Notification Center nothing happens – no errors and no log messages. The transport is the Home Assistant event bus (interface “schema 1”, no MQTT). No credentials are sent.
+
+You control it under **Server (gear) → Notification Center** or in the **Configure** dialog: one main switch and one switch per message type, sorted by urgency (critical first). Default: everything on. Disabled types are not sent; open messages of that type are closed by the Notification Center itself. If the Notification Center is not installed, the switches stay usable and the card says so. With `read_only: true` the switches disappear.
+
+| Message type | Urgency | When | Closes |
+|---|---|---|---|
+| Matter Server unreachable | critical | connection to the Matter Server lost | when it is reachable again |
+| Battery critical | critical | battery below the critical threshold | when the value is above it again |
+| Device offline | warning | device is not reachable | when it is back online |
+| Battery low | warning | battery below the low (but not critical) threshold | when the value is above it again |
+| Firmware update available | info | an update exists for a device | when none is pending |
+| New device | info | device added to the Matter Server | one-off, stays until acknowledged |
+| Device removed | info | device removed from the Matter Server | one-off, stays until acknowledged |
+
+Notes:
+
+- At startup only the **initial state** is reported (without push), afterwards exactly one message per state change. The existing battery thresholds from the options apply; there are no new thresholds.
+- Each message carries the device as its subject (so the Notification Center can filter per device later). The integration supplies the texts in five languages (German, English, Dutch, French, Spanish) once when registering.
+- The Home Assistant events `matter_manager_*` remain unchanged and independent.
+- **Test status:** The connection was tested against a simulated event bus and in a headless browser, **not against a real Notification Center and not on real hardware**.
+
 ## Sensors
 
 `Devices`, `Offline devices`, `Devices with low battery`, `Devices with critical battery`, `Available firmware updates` and `Fabrics`. The sensors for offline, battery and updates carry the device list as an attribute.
@@ -172,17 +196,24 @@ The installed version is shown in three places: in the card under **Server (gear
 
 If the card and integration versions differ (stale browser cache), this is also marked in orange.
 
+If a **beta or RC version** is running (e.g. `1.0.4b1`), the query also considers pre-releases, because GitHub does not return them as the “latest release”. In HACS you only see pre-releases if you enable **Show beta versions** for the integration.
+
 ## Integration settings
 
 Under **Configure** (showing the installed version): “low battery” threshold, “critical battery” threshold (must be less than or equal) and events on/off. **Reconfigure** lets you change the Matter Server address.
+
+The dialog also contains **Send messages to the Notification Center** (main switch) and **Message types to send** (see [Notification Center](#notification-center-optional)). Changes to these two switches are applied without reloading the integration.
 
 ## Security
 
 All write actions (rename, remove, toggling functions, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes. Switching is limited to on/off of the OnOff cluster, the value must be a boolean and the device must be reachable; locks and all other functions are read-only. Image addresses from `device_images` and `image_base` are checked against unsafe schemes (e.g. `javascript:`).
 
+The Notification Center switches can only be changed over WebSocket by an **administrator**; the message type is checked against the list of known types. Messages contain only device names and values such as the battery level.
+
 ## Known limitations
 
-- **Version 1.0.3 has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
+- **Version 1.0.4b1 is a pre-release (beta) and has not been tested on real hardware.** It was developed against the documented WebSocket interface of python-matter-server and against a simulated server.
+- **Notification Center:** The connection was only tested against a simulated event bus, not against a real Notification Center. The card and the integration dialog are translated into German, English, Dutch and French; for Spanish the integration only supplies the message texts to the Notification Center, the card then shows English.
 - **Manufacturer and device name** come from the device's basic data (vendor name and product name). If the product name starts with the manufacturer name, it is removed; if the manufacturer is missing, it is only detected when another device reports the same manufacturer name. Without these values the device appears under “Unknown”. The device class comes from the endpoints' device types; devices with an unknown type land in “Other”. Both were only checked with simulated data.
 - **Writing Matter commands are untested:** the format of `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` and `remove_matter_fabric` may differ depending on the Matter Server version. In that case the function has no effect or reports an error – read-only functions are not affected.
 - **No groups:** Zigbee groups have no direct Matter equivalent for this interface; the category is called “Fabrics” instead.
@@ -207,6 +238,7 @@ All write actions (rename, remove, toggling functions, firmware, bindings, fabri
 
 | Version | Change |
 |---|---|
+| **1.0.4b1** | **Pre-release (beta).** New: optional connection to the **Notification Center** (interface “schema 1” over the event bus): message types server unreachable, device offline, battery critical/low, firmware update, new/removed device; main switch and a switch per message type in the card (Server → Notification Center) and in the Configure dialog, sorted by urgency. The update check understands beta/RC versions and also considers pre-releases when a pre-release is installed. Tested only with simulated data, not against a real Notification Center and not on real hardware |
 | **1.0.3** | New: small device images (candidates from the Zigbee2MQTT image library, can be disabled, own image folder possible), category **Functions** with switchable on/off switches and measured values, device popup sections Functions and Entities with copy to clipboard. New keys `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Tested only with simulated data and in a headless browser, not on real hardware |
 | **1.0.2** | Card resource path corrected: `/matter_manager/matter-manager-card.js` instead of `/matter_manager_files/…` (existing entries are migrated automatically). Manufacturer and device name are read from the type designation. New: filters and grouping (manufacturer, device name, device class) as in the Zigbee2MQTT Manager. French (pull request #1) |
 | 1.0.1 | First release on GitHub: new icon and logo, Dutch (integration and card), README in three languages |

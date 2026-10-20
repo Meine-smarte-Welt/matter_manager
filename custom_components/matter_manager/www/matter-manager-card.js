@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 85dfdf65c263bfdcf553fdf4e7fb9a8cb280821641fbd02b99f2a514a96e5af3
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 23631da1d4dc8d63367c324005f3952480c9161045ced17375ce98b6b1f9f0b5
 /**
  * matter-manager-card
  * -------------------
@@ -40,7 +40,7 @@
  * Kartentyp: custom:matter-manager-card
  */
 
-const CARD_VERSION = "1.0.3";
+const CARD_VERSION = "1.0.4b1";
 const RELEASES_URL = "https://github.com/Meine-smarte-Welt/matter_manager/releases";
 
 const TAB_ORDER = ["devices", "battery", "updates", "functions", "fabrics", "bindings", "bridge"];
@@ -329,6 +329,10 @@ const I18N = {
     app_update_hint: "Aktualisiere über HACS (Integration) und starte Home Assistant neu. Danach den Browser neu laden (Strg+F5).",
     app_mismatch: "Karte ({card}) und Integration ({integration}) haben unterschiedliche Versionen. Browser-Cache leeren (Strg+F5) bzw. die App neu laden.",
     sec_status: "Matter Server", sec_commission: "Gerät hinzufügen", sec_options: "Server-Optionen", sec_maintenance: "Wartung", sec_events: "Ereignisse",
+    sec_nc: "Notification Center", nc_found: "Notification Center erkannt", nc_missing: "Notification Center nicht installiert",
+    nc_missing_hint: "Die Meldungen werden gesendet, sobald das Notification Center installiert ist.", nc_master: "Meldungen an das Notification Center senden",
+    nc_master_off_hint: "Hauptschalter aus: Es wird nichts gesendet.", nc_types: "Meldungsarten", nc_saved: "Gespeichert", nc_active: "Aktiv", nc_inactive: "Aus",
+    sev_critical: "Kritisch", sev_warning: "Warnung", sev_info: "Info", sev_ok: "OK",
     f_status: "Status", f_sdk: "Matter-SDK", f_schema: "API-Schema", f_server_fabric: "Fabric-ID", f_compressed: "Kompakte Fabric-ID", f_url: "Adresse",
     f_nodes: "Geräte (Nodes)", f_wifi_creds: "WLAN-Zugangsdaten", f_thread_creds: "Thread-Zugangsdaten", f_bluetooth: "Bluetooth",
     commission_hint: "Gib den Setup-Code des Geräts ein (QR-Text „MT:…“ oder 11/21-stelliger Code). Für Thread-Geräte müssen die Thread-Zugangsdaten im Matter Server gesetzt sein.",
@@ -441,6 +445,10 @@ const I18N = {
     app_update_hint: "Update via HACS (integration) and restart Home Assistant. Then reload the browser (Ctrl+F5).",
     app_mismatch: "Card ({card}) and integration ({integration}) have different versions. Clear the browser cache (Ctrl+F5) or reload the app.",
     sec_status: "Matter Server", sec_commission: "Add device", sec_options: "Server options", sec_maintenance: "Maintenance", sec_events: "Events",
+    sec_nc: "Notification Center", nc_found: "Notification Center detected", nc_missing: "Notification Center not installed",
+    nc_missing_hint: "Messages are sent as soon as the Notification Center is installed.", nc_master: "Send messages to the Notification Center",
+    nc_master_off_hint: "Main switch off: nothing is sent.", nc_types: "Message types", nc_saved: "Saved", nc_active: "On", nc_inactive: "Off",
+    sev_critical: "Critical", sev_warning: "Warning", sev_info: "Info", sev_ok: "OK",
     f_status: "Status", f_sdk: "Matter SDK", f_schema: "API schema", f_server_fabric: "Fabric ID", f_compressed: "Compressed fabric ID", f_url: "Address",
     f_nodes: "Devices (nodes)", f_wifi_creds: "Wi-Fi credentials", f_thread_creds: "Thread credentials", f_bluetooth: "Bluetooth",
     commission_hint: "Enter the device's setup code (QR text “MT:…” or 11/21-digit code). For Thread devices the Thread credentials must be set in the Matter Server.",
@@ -552,6 +560,10 @@ const I18N = {
     app_update_hint: "Werk bij via HACS (integratie) en start Home Assistant opnieuw op. Laad daarna de browser opnieuw (Ctrl+F5).",
     app_mismatch: "Kaart ({card}) en integratie ({integration}) hebben verschillende versies. Wis de browsercache (Ctrl+F5) of laad de app opnieuw.",
     sec_status: "Matter Server", sec_commission: "Apparaat toevoegen", sec_options: "Serveropties", sec_maintenance: "Onderhoud", sec_events: "Gebeurtenissen",
+    sec_nc: "Notification Center", nc_found: "Notification Center gevonden", nc_missing: "Notification Center niet geïnstalleerd",
+    nc_missing_hint: "Meldingen worden verzonden zodra het Notification Center is geïnstalleerd.", nc_master: "Meldingen naar het Notification Center sturen",
+    nc_master_off_hint: "Hoofdschakelaar uit: er wordt niets verzonden.", nc_types: "Meldingstypen", nc_saved: "Opgeslagen", nc_active: "Aan", nc_inactive: "Uit",
+    sev_critical: "Kritiek", sev_warning: "Waarschuwing", sev_info: "Info", sev_ok: "OK",
     f_status: "Status", f_sdk: "Matter-SDK", f_schema: "API-schema", f_server_fabric: "Fabric-ID", f_compressed: "Compacte fabric-ID", f_url: "Adres",
     f_nodes: "Apparaten (nodes)", f_wifi_creds: "Wifi-gegevens", f_thread_creds: "Thread-gegevens", f_bluetooth: "Bluetooth",
     commission_hint: "Voer de setupcode van het apparaat in (QR-tekst „MT:…” of code van 11/21 cijfers). Voor Thread-apparaten moeten de Thread-gegevens in de Matter Server zijn ingesteld.",
@@ -663,6 +675,10 @@ const I18N = {
     app_update_hint: "Effectuez la mise à jour via HACS (intégration) et redémarrez Home Assistant. Rechargez ensuite le navigateur (Ctrl+F5).",
     app_mismatch: "La carte ({card}) et l'intégration ({integration}) ont des versions différentes. Videz le cache du navigateur (Ctrl+F5) ou rechargez l'application.",
     sec_status: "Matter Server", sec_commission: "Ajouter un appareil", sec_options: "Options du serveur", sec_maintenance: "Maintenance", sec_events: "Événements",
+    sec_nc: "Notification Center", nc_found: "Notification Center détecté", nc_missing: "Notification Center non installé",
+    nc_missing_hint: "Les messages seront envoyés dès que le Notification Center sera installé.", nc_master: "Envoyer des messages au Notification Center",
+    nc_master_off_hint: "Interrupteur principal désactivé : rien n'est envoyé.", nc_types: "Types de messages", nc_saved: "Enregistré", nc_active: "Activé", nc_inactive: "Désactivé",
+    sev_critical: "Critique", sev_warning: "Avertissement", sev_info: "Info", sev_ok: "OK",
     f_status: "Statut", f_sdk: "Matter-SDK", f_schema: "Schéma d'API", f_server_fabric: "Fabric-ID", f_compressed: "Fabric-ID compressé", f_url: "Adresse",
     f_nodes: "Appareils (nodes)", f_wifi_creds: "Identifiants Wi-Fi", f_thread_creds: "Identifiants Thread", f_bluetooth: "Bluetooth",
     commission_hint: "Saisissez le code d'installation de l'appareil (texte QR « MT:… » ou code à 11/21 chiffres). Pour les appareils Thread, les identifiants Thread doivent être définis dans le Matter Server.",
@@ -968,6 +984,9 @@ const BASE_CARD_STYLES = `
   .sw[disabled] { opacity: 0.5; cursor: default; }
   .sw:focus-visible { outline: 2px solid var(--mmm-color-tab-active); outline-offset: 2px; }
   .sw-label { min-width: 2.2em; text-align: left; font-weight: 500; }
+  .nc-label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  .nc-label ha-icon { --mdc-icon-size: 18px; color: var(--secondary-text-color, #727272); flex-shrink: 0; }
+  .nc-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .ent-list { max-height: 260px; overflow-y: auto; }
   .ent { display: flex; flex-direction: column; min-width: 0; }
   .ent code { font-size: 0.9em; word-break: break-all; }
@@ -2217,9 +2236,66 @@ class MatterManagerCard extends HTMLElement {
       ${this._accordion("bridge:status", "mdi:information-outline", this._t("sec_status"), info, { open: true })}
       ${this._accordion("bridge:commission", "mdi:plus-circle-outline", this._t("sec_commission"), commission)}
       ${this._accordion("bridge:options", "mdi:tune", this._t("sec_options"), options)}
+      ${this._renderNc()}
       ${this._accordion("bridge:maintenance", "mdi:wrench-outline", this._t("sec_maintenance"), maintenance)}
       ${this._accordion("bridge:events", "mdi:history", this._t("sec_events"), events, { meta: String(this._data.events.length) })}
     </div>`;
+  }
+
+  // Notification Center (optional): Hauptschalter + Meldungsarten, nach Dringlichkeit sortiert
+  _renderNc() {
+    const nc = this._data?.nc;
+    if (!nc || !Array.isArray(nc.types)) return "";
+    const t = (k, v) => this._t(k, v);
+    const ro = this._readOnly;
+    const order = ["critical", "warning", "info", "ok"];
+    const color = {
+      critical: "var(--mmm-color-error)",
+      warning: "var(--mmm-color-warning)",
+      info: "var(--mmm-color-info)",
+      ok: "var(--mmm-color-success)",
+    };
+    const chosen = nc.chosen || {};
+    const sw = (act, on, label, extra = "", disabled = false) =>
+      `<button class="sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="${esc(label)}" title="${esc(label)}"
+        data-act="${act}" data-next="${on ? 0 : 1}" ${extra} ${disabled ? "disabled" : ""}><span class="knob"></span></button>`;
+    const pill = (on) =>
+      `<span class="pill" style="--c:${on ? "var(--mmm-color-success)" : "var(--mmm-color-row-icon)"}">${esc(t(on ? "nc_active" : "nc_inactive"))}</span>`;
+    const types = [...nc.types].sort((a, b) => order.indexOf(a.severity) - order.indexOf(b.severity));
+
+    const status = nc.available
+      ? `<span class="pill" style="--c:var(--mmm-color-success)">${esc(t("nc_found"))}</span>`
+      : `<span class="pill" style="--c:var(--mmm-color-info)">${esc(t("nc_missing"))}</span>`;
+    const master = `<div class="settings-line"><span class="settings-label">${esc(t("nc_master"))}</span><span class="settings-value">${
+      ro ? pill(nc.enabled) : sw("nc_master", nc.enabled, t("nc_master"))
+    }</span></div>`;
+    const rows = types
+      .map((x) => {
+        const label = x.labels?.[this._lang] || x.labels?.en || x.type;
+        const on = x.type in chosen ? chosen[x.type] === true : x.enabled === true;
+        const icon = /^mdi:[a-z0-9-]+$/.test(x.icon || "") ? x.icon : "mdi:bell-outline";
+        const dot = `<span class="nc-dot" style="background:${color[x.severity] || color.info}" title="${esc(t(`sev_${x.severity}`))}"></span>`;
+        const right = ro ? pill(x.enabled) : sw("nc_type", on, label, `data-nc-type="${esc(x.type)}"`, !nc.enabled);
+        return `<div class="settings-line"><span class="settings-label nc-label">${dot}<ha-icon icon="${esc(icon)}"></ha-icon><span>${esc(label)}</span></span><span class="settings-value">${right}</span></div>`;
+      })
+      .join("");
+    const body = [
+      this._line(t("f_status"), status),
+      nc.available ? "" : `<div class="hint">${esc(t("nc_missing_hint"))}</div>`,
+      master,
+      !nc.enabled ? `<div class="hint">${esc(t("nc_master_off_hint"))}</div>` : "",
+      `<div class="hint">${esc(t("nc_types"))}</div>`,
+      rows,
+    ].join("");
+    const active = types.filter((x) => x.enabled).length;
+    return this._accordion("bridge:nc", "mdi:bell-outline", t("sec_nc"), body, {
+      meta: nc.enabled ? `${active}/${types.length}` : t("nc_inactive"),
+    });
+  }
+
+  async _ncSet(action, params) {
+    if (this._readOnly) return;
+    if (await this._call(action, params)) this._toast(this._t("nc_saved"));
   }
 
   // App-Version: installierte Version + Hinweis, wenn eine neuere Version existiert
@@ -2356,6 +2432,10 @@ class MatterManagerCard extends HTMLElement {
         return this._refresh();
       case "fn_toggle":
         return void (await this._fnToggle(d.id, d.fn, d.next === "1"));
+      case "nc_master":
+        return void (await this._ncSet("nc_set_master", { enabled: d.next === "1" }));
+      case "nc_type":
+        return void (await this._ncSet("nc_set_type", { nc_type: d.ncType, enabled: d.next === "1" }));
       case "copy":
         return void (await this._copyText(d.text));
       case "copy_all":

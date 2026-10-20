@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 69746a0bf8e6dca30c00461a38621c1e83a82908209476b1a2cfa55bc05d9cf6
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): df29536aa9dd0a4daeefd7a3fa5922df29fe2c41aba3fe401dfe7eec1c705761
 """WebSocket-API zwischen Lovelace-Karte und Integration."""
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, WS_ACTION, WS_DETAILS, WS_SUBSCRIBE
 from .manager import MatterManager
+from .nc_catalog import NC_TYPE_KEYS
 
 ACTIONS = [
     # Geräte
@@ -39,6 +40,9 @@ ACTIONS = [
     "fabric_label",
     "reconnect",
     "app_update_check",
+    # Notification Center (optional)
+    "nc_set_master",
+    "nc_set_type",
 ]
 
 
@@ -125,6 +129,8 @@ async def ws_details(
         vol.Optional("clusters"): [vol.Any(str, int)],
         vol.Optional("fabric_index"): vol.Any(int, str),
         vol.Optional("value"): vol.Any(str, bool, int, float, dict),
+        vol.Optional("nc_type"): vol.In(NC_TYPE_KEYS),
+        vol.Optional("enabled"): bool,
     }
 )
 @websocket_api.async_response
@@ -191,6 +197,10 @@ async def ws_action(
             await manager.async_reconnect()
         elif action == "app_update_check":
             await manager.async_check_app_update()
+        elif action == "nc_set_master":
+            await manager.async_nc_set_master(msg.get("enabled"))
+        elif action == "nc_set_type":
+            await manager.async_nc_set_type(msg.get("nc_type"), msg.get("enabled"))
     except ValueError as err:
         connection.send_error(msg["id"], "invalid", str(err))
         return

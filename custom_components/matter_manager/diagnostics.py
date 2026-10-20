@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 5adeb14a32074e1f1f39e0d916b1569d0cb7a1f6c142e923040535a318db1e49
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 2a41e9adf110ae2e566a96902944374e62308ae14a37c5a82215eee8b3a8bda3
 """Diagnose-Download (Namen, Seriennummern und Fabric-Bezeichnungen werden weggelassen)."""
 
 from __future__ import annotations
@@ -60,5 +60,6 @@ async def async_get_config_entry_diagnostics(
             for f in data["fabrics"]
         ],
         "app": data["app"],
+        "notification_center": manager.nc_diagnostics(),
         "devices": devices,
     }

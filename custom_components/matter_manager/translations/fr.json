@@ -40,11 +40,15 @@
         "data": {
           "low_battery_threshold": "Seuil pour « batterie faible » (%)",
           "critical_battery_threshold": "Seuil pour « batterie critique » (%)",
-          "fire_events": "Déclencher les événements Home Assistant"
+          "fire_events": "Déclencher les événements Home Assistant",
+          "nc_enabled": "Envoyer des messages au Notification Center",
+          "nc_types": "Types de messages à envoyer"
         },
         "data_description": {
           "critical_battery_threshold": "Doit être inférieur ou égal au seuil « batterie faible ».",
-          "fire_events": "Déclenche p. ex. matter_manager_device_offline, _battery_low et _update_available – utilisables comme déclencheurs d'automatisation."
+          "fire_events": "Déclenche p. ex. matter_manager_device_offline, _battery_low et _update_available – utilisables comme déclencheurs d'automatisation.",
+          "nc_enabled": "N'a d'effet que si le Notification Center est installé. Sans lui, rien ne se passe.",
+          "nc_types": "Triés par urgence. Les types désélectionnés ne sont pas envoyés."
         }
       }
     },
@@ -101,6 +105,19 @@
           "name": "ID de l'entrée",
           "description": "Nécessaire uniquement en présence de plusieurs instances."
         }
+      }
+    }
+  },
+  "selector": {
+    "nc_types": {
+      "options": {
+        "server_offline": "Serveur Matter injoignable",
+        "battery_critical": "Batterie critique",
+        "device_offline": "Appareil hors ligne",
+        "battery_low": "Batterie faible",
+        "update_available": "Mise à jour du firmware disponible",
+        "device_joined": "Nouvel appareil",
+        "device_left": "Appareil supprimé"
       }
     }
   }

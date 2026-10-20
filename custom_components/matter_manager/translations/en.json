@@ -40,11 +40,15 @@
         "data": {
           "low_battery_threshold": "Threshold for “low battery” (%)",
           "critical_battery_threshold": "Threshold for “critical battery” (%)",
-          "fire_events": "Fire Home Assistant events"
+          "fire_events": "Fire Home Assistant events",
+          "nc_enabled": "Send messages to the Notification Center",
+          "nc_types": "Message types to send"
         },
         "data_description": {
           "critical_battery_threshold": "Must be less than or equal to the “low battery” threshold.",
-          "fire_events": "Fires e.g. matter_manager_device_offline, _battery_low and _update_available – usable as automation triggers."
+          "fire_events": "Fires e.g. matter_manager_device_offline, _battery_low and _update_available – usable as automation triggers.",
+          "nc_enabled": "Only has an effect if the Notification Center is installed. Without it, nothing happens.",
+          "nc_types": "Sorted by urgency. Deselected types are not sent."
         }
       }
     },
@@ -101,6 +105,19 @@
           "name": "Entry ID",
           "description": "Only needed with several instances."
         }
+      }
+    }
+  },
+  "selector": {
+    "nc_types": {
+      "options": {
+        "server_offline": "Matter Server unreachable",
+        "battery_critical": "Battery critical",
+        "device_offline": "Device offline",
+        "battery_low": "Battery low",
+        "update_available": "Firmware update available",
+        "device_joined": "New device",
+        "device_left": "Device removed"
       }
     }
   }

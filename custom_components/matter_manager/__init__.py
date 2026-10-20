@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 16f08c286abb6861189c04a6060333f02bbf5183d36e04e31f253a19b9409d4a
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): cccfaae6f66ce1f6051a5467ee488e0b1aea4ef33de1a9f66030fac873cc10fb
 """Matter Manager – Verwaltung der Matter-Geräte direkt in Home Assistant."""
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     entry.runtime_data = manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_reload_on_options))
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
 
@@ -206,5 +206,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
     return unloaded
 
 
-async def _async_reload_on_options(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+async def _async_options_updated(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+    """Nur die Schalter des Notification Centers geändert: ohne Neuladen übernehmen."""
+    manager = getattr(entry, "runtime_data", None)
+    if manager is not None and manager.only_nc_options_changed():
+        manager.async_nc_options_changed()
+        return
     await hass.config_entries.async_reload(entry.entry_id)

@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 32a94e3f3a976400d745a3d70e18203584aa95b509394d5bedee3e0b020bd2ae
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 83a8168b30f530bab8c58e24f8751e5d026b58b602e3343ad1d7190d231055be
 """Config Flow für Matter Manager."""
 
 from __future__ import annotations
@@ -16,6 +16,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
     CONF_CRITICAL_BATTERY,
@@ -30,6 +35,8 @@ from .const import (
     VERSION,
 )
 from .matter_client import MatterConnectionError, MatterServerError, async_probe
+from .nc_catalog import NC_CATALOG, NC_TYPE_KEYS
+from .notification_bridge import OPT_ENABLED, OPT_TYPES
 
 _BATTERY_VALIDATOR = vol.All(vol.Coerce(int), vol.Range(min=1, max=99))
 
@@ -161,7 +168,7 @@ class MatterManagerConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class MatterManagerOptionsFlow(OptionsFlow):
-    """Nachträglich änderbar: Batterie-Schwellen und Ereignisse."""
+    """Nachträglich änderbar: Batterie-Schwellen, Ereignisse und Notification Center."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -171,9 +178,20 @@ class MatterManagerOptionsFlow(OptionsFlow):
             if user_input[CONF_CRITICAL_BATTERY] > user_input[CONF_LOW_BATTERY]:
                 errors[CONF_CRITICAL_BATTERY] = "critical_above_low"
             else:
-                return self.async_create_entry(data=user_input)
+                chosen = set(user_input.get(OPT_TYPES) or [])
+                data = {
+                    **user_input,
+                    OPT_TYPES: {t: t in chosen for t in NC_TYPE_KEYS},
+                }
+                return self.async_create_entry(data=data)
 
         opts = self.config_entry.options
+        nc_chosen = opts.get(OPT_TYPES, {})
+        nc_enabled_types = [
+            item["type"]
+            for item in NC_CATALOG
+            if nc_chosen.get(item["type"], item.get("enabled_default", True))
+        ]
         manager = getattr(self.config_entry, "runtime_data", None)
         app = getattr(manager, "app", None) or {}
         german = str(self.hass.config.language).startswith("de")
@@ -209,6 +227,17 @@ class MatterManagerOptionsFlow(OptionsFlow):
                         CONF_FIRE_EVENTS,
                         default=opts.get(CONF_FIRE_EVENTS, DEFAULT_FIRE_EVENTS),
                     ): bool,
+                    vol.Required(
+                        OPT_ENABLED, default=opts.get(OPT_ENABLED, True)
+                    ): bool,
+                    vol.Required(OPT_TYPES, default=nc_enabled_types): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(NC_TYPE_KEYS),
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                            translation_key="nc_types",
+                        )
+                    ),
                 }
             ),
             errors=errors,
