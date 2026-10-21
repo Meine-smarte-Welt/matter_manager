@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 9ad8c1046ec16f8b68ea67d4a7eded52e37e232420415ffc23dc1e9fa2eb9b51
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 1d684518a54bd8115e29b64a4b24c74e5b321551e302647218239ae771068ada
 /**
  * matter-manager-card
  * -------------------
@@ -40,7 +40,7 @@
  * Kartentyp: custom:matter-manager-card
  */
 
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.1.1";
 // Höchstlänge eines Kommentars (muss zu COMMENT_MAX_LENGTH in const.py passen)
 const COMMENT_MAX = 1000;
 const RELEASES_URL = "https://github.com/Meine-smarte-Welt/matter_manager/releases";
@@ -751,6 +751,123 @@ const I18N = {
     copied: "Copié : {v}", copied_n: "{n} entités copiées",
     copy_failed: "Copie impossible. Le navigateur n'autorise le presse-papiers qu'en HTTPS.", copy_manual: "Sélectionner pour copier (Ctrl+C) :",
   },
+  es: {
+    connecting: "Conectando …",
+    error_generic: "La acción ha fallado.",
+    tab_devices: "Dispositivos", tab_battery: "Batería", tab_updates: "Actualizaciones",
+    tab_fabrics: "Fabrics", tab_bindings: "Bindings", tab_bridge: "Servidor",
+    chip_devices: "Dispositivos", chip_offline: "Sin conexión", chip_low_battery: "Batería baja", chip_updates: "Actualizaciones",
+    search: "Buscar nombre, modelo o ID de nodo", sort: "Ordenar",
+    sort_name_asc: "Nombre A–Z", sort_name_desc: "Nombre Z–A", sort_battery_asc: "Batería (la más baja primero)",
+    sort_signal_asc: "Señal (la más débil primero)", sort_last_seen_desc: "Visto por última vez (más reciente primero)",
+    sort_last_seen_asc: "Visto por última vez (más antiguo primero)", sort_ota: "Estado de actualización",
+    no_data: "Aún no hay dispositivos del Matter Server. ¿Hay algún dispositivo configurado?", no_results: "Sin coincidencias.",
+    show_more: "Mostrar {n} más",
+    status_online: "En línea (según el Matter Server)", status_offline: "Sin conexión (según el Matter Server)", status_unknown: "Estado desconocido.",
+    offline: "sin conexión", online: "en línea", unknown: "desconocido", inactive: "inactivo", interviewing: "Entrevistando", disabled: "desactivado",
+    never: "nunca", yes: "sí", no: "no", close: "Cerrar", save: "Guardar", add: "Añadir", cancel: "Cancelar",
+    confirm: "¿Seguro?", loading: "Cargando …", details: "Detalles", remove: "Eliminar dispositivo", rename: "Renombrar",
+    set: "definido", not_set: "sin definir", all: "todos",
+    bridge_error: "Sin conexión con la integración", server_offline: "Matter Server no conectado",
+    server_offline_hint: "La conexión se restablece automáticamente. Los valores mostrados corresponden al último estado conocido.",
+    server_incompatible: "Versión del Matter Server demasiado antigua",
+    server_incompatible_hint: "Esquema de API {v} detectado: se requiere al menos {min}. Actualiza el Matter Server.",
+    commission_running: "Añadiendo dispositivo", commission_running_hint: "Puede tardar hasta dos minutos. Mantén el dispositivo cerca.",
+    job_check: "Comprobación de firmware en curso", job_update: "Instalando actualizaciones de firmware",
+    check_all: "Buscar actualizaciones de todos", checking: "Comprobación iniciada …", update_all: "Instalar {n} actualizaciones una a una",
+    update_all_hint: "Las actualizaciones se inician una tras otra, nunca en paralelo. Los dispositivos con batería suelen recoger las actualizaciones solo después de horas. Los dispositivos deben permanecer al alcance.",
+    install: "Instalar", check: "Buscar actualización", update_now: "Instalar actualización",
+    ota_available: "Actualización disponible", ota_updating: "Actualizando", ota_scheduled: "Programada", ota_idle: "Actualizado",
+    ota_unknown: "Sin comprobar", ota_unsupported: "Este dispositivo no admite actualizaciones OTA.",
+    update_confirm: "El dispositivo descarga la actualización del Matter Server y se reinicia después. Debe permanecer encendido y al alcance.",
+    update_found: "Actualización disponible", no_update: "No hay actualización disponible", done_update: "Actualización iniciada",
+    release_notes: "Notas de la versión", f_checked_ota: "Última comprobación",
+    fabrics_hint: "Los dispositivos Matter pueden estar conectados a varios ecosistemas a la vez (multi-admin). Aquí ves a cuáles pertenece cada dispositivo y puedes eliminar una conexión.",
+    no_fabrics: "No se han encontrado fabrics.", fabric_own: "Home Assistant (este sistema)", fabric_unknown: "Ecosistema desconocido",
+    fabric_remove: "Eliminar conexión", fabric_own_badge: "este sistema", done_fabric: "Conexión eliminada",
+    f_vendor_fabric: "Ecosistema", f_fabric_id: "ID de fabric", no_fabrics_device: "No hay datos de fabric.",
+    sec_share: "Compartir con otro ecosistema", share_hint: "Abre una ventana de emparejamiento. Introduce el código en Apple Home, Google Home, Alexa u otra app Matter.",
+    share_open: "Abrir ventana de emparejamiento", share_manual: "Código de configuración", share_qr: "Texto del QR", share_valid: "válido durante {n} minutos", done_window: "Ventana de emparejamiento abierta",
+    no_bindings: "No hay bindings.", no_bindings_device: "No hay bindings configurados.",
+    bindings_hint: "Los bindings conectan dispositivos directamente (p. ej. botón → luz) y funcionan incluso sin Home Assistant.",
+    bind: "Vincular", unbind: "Desvincular", bind_target: "Dispositivo de destino", pick_target: "Elige un destino.",
+    bind_endpoint: "Endpoint de origen", bind_clusters: "Funciones",
+    bind_hint: "Sin selección se vinculan todas las funciones coincidentes. El dispositivo de destino recibe automáticamente el permiso de acceso necesario. Despierta antes los dispositivos con batería pulsando un botón.",
+    done_bound: "Vinculado", done_unbound: "Binding eliminado", bindings_bridged_hint: "Los bindings solo están disponibles para dispositivos conectados directamente a la red.",
+    sec_app: "Versión de la app", f_integration_version: "Integración", f_card_version: "Tarjeta", f_latest_version: "Última versión",
+    app_up_to_date: "Actualizada", app_update_available: "Actualización disponible: {v}", app_check_failed: "Comprobación fallida (GitHub no accesible)", app_not_checked: "aún sin comprobar",
+    f_checked: "Última comprobación", app_check_now: "Comprobar ahora", app_checking: "Buscando una versión nueva …", app_release: "Ver versión",
+    app_update_hint: "Actualiza mediante HACS (integración) y reinicia Home Assistant. Después recarga el navegador (Ctrl+F5).",
+    app_mismatch: "La tarjeta ({card}) y la integración ({integration}) tienen versiones distintas. Borra la caché del navegador (Ctrl+F5) o recarga la app.",
+    sec_status: "Matter Server", sec_commission: "Añadir dispositivo", sec_options: "Opciones del servidor", sec_maintenance: "Mantenimiento", sec_events: "Eventos",
+    sec_nc: "Notification Center", nc_found: "Notification Center detectado", nc_missing: "Notification Center no instalado",
+    nc_missing_hint: "Los mensajes se envían en cuanto se instale el Notification Center.", nc_master: "Enviar mensajes al Notification Center",
+    nc_master_off_hint: "Interruptor principal desactivado: no se envía nada.", nc_types: "Tipos de mensajes", nc_saved: "Guardado", nc_active: "Activado", nc_inactive: "Desactivado",
+    sev_critical: "Crítico", sev_warning: "Aviso", sev_info: "Info", sev_ok: "OK",
+    f_status: "Estado", f_sdk: "SDK de Matter", f_schema: "Esquema de API", f_server_fabric: "ID de fabric", f_compressed: "ID de fabric comprimido", f_url: "Dirección",
+    f_nodes: "Dispositivos (nodos)", f_wifi_creds: "Credenciales de Wi-Fi", f_thread_creds: "Credenciales de Thread", f_bluetooth: "Bluetooth",
+    commission_hint: "Introduce el código de configuración del dispositivo (texto del QR “MT:…” o código de 11/21 dígitos). Para dispositivos Thread, las credenciales de Thread deben estar definidas en el Matter Server.",
+    commission_code: "Código de configuración", commission_network_only: "Buscar solo en la red (sin Bluetooth)", commission_start: "Añadir dispositivo",
+    pairing_start: "Añadir dispositivo", done_commission: "Dispositivo añadido",
+    fabric_label: "Etiqueta para nuevas conexiones", fabric_label_hint: "Se guarda en los dispositivos como nombre del fabric de Home Assistant en futuros emparejamientos (hasta 32 caracteres).",
+    done_fabric_label: "Etiqueta guardada",
+    reconnect: "Reconectar", reconnect_hint: "Interrumpe la conexión con el Matter Server y la restablece. El propio Matter Server no se reinicia.", done_reconnect: "Reconectando …",
+    read_only_hint: "Esta tarjeta es de solo lectura.", no_events: "Sin eventos desde el inicio.",
+    ev_device_joined: "Nuevo dispositivo", ev_device_leave: "Dispositivo eliminado",
+    ev_offline: "Sin conexión", ev_online: "De nuevo en línea", ev_battery_low: "Batería baja", ev_update_available: "Actualización disponible",
+    ev_server_connected: "Matter Server conectado", ev_server_disconnected: "Conexión con el Matter Server perdida",
+    sec_info: "Información", sec_fabrics: "Fabrics (multi-admin)", sec_firmware: "Firmware", sec_diag: "Diagnóstico", sec_remove: "Eliminar dispositivo",
+    new_name: "Nombre nuevo", rename_entities_hint: "Al renombrar cambia el nombre del dispositivo en Home Assistant. Las {n} entidades conservan sus ID:",
+    rename_hint: "El nombre se define en Home Assistant y, si es posible, en el propio dispositivo.",
+    done_renamed: "Renombrado",
+    sec_comment: "Comentario", comment_placeholder: "Tu propia nota sobre este dispositivo …", comment_hint: "Se guarda en Home Assistant (hasta {n} caracteres) y se puede buscar.",
+    comment_delete: "Eliminar comentario", done_comment: "Comentario guardado", done_comment_deleted: "Comentario eliminado",
+    remove_hint: "Elimina el dispositivo de Home Assistant y del Matter Server. Si no es accesible, sigue registrado en el dispositivo y puede que haya que restablecerlo.",
+    done_removed: "Dispositivo eliminado",
+    ping: "Comprobar accesibilidad", interview: "Volver a entrevistar el dispositivo", done_interview: "Dispositivo entrevistado de nuevo",
+    ping_result: "Accesible: {n} de {m} direcciones", diag_hint: "“Volver a entrevistar” lee de nuevo todas las propiedades del dispositivo.",
+    bridged_hint: "Este dispositivo está conectado a un puente y se gestiona allí. Aquí solo se puede cambiar su nombre en Home Assistant.",
+    f_vendor: "Fabricante", f_model: "Modelo", f_description: "Descripción", f_type: "Tipo", f_network: "Red",
+    f_node_id: "ID de nodo", f_endpoint: "Endpoint", f_bridge: "Puente", f_sw: "Firmware", f_hw: "Hardware", f_part: "Número de pieza",
+    f_serial: "Número de serie", f_signal: "Intensidad de señal", f_battery: "Batería", f_voltage: "Tensión", f_available: "Accesible",
+    f_last_seen: "Visto por última vez", f_commissioned: "Configurado", f_thread_channel: "Canal Thread", f_thread_network: "Red Thread",
+    f_wifi_channel: "Canal Wi-Fi", f_ip: "Direcciones IP", f_fabrics: "Fabrics",
+    type_Router: "Router Thread", type_Leader: "Líder Thread", type_EndDevice: "Dispositivo final Thread", type_SleepyEndDevice: "Dispositivo final Thread (en reposo)",
+    type_Thread: "Thread", type_WiFi: "Wi-Fi", type_Ethernet: "Ethernet", type_Bridge: "Puente", type_Bridged: "Dispositivo tras un puente",
+    net_thread: "Thread", net_wifi: "Wi-Fi", net_ethernet: "Ethernet",
+    battery_ok: "OK", battery_warning: "Aviso", battery_critical: "Crítica", battery_replace: "Sustituir",
+    // Agrupar y filtrar (desde 1.0.2)
+    group_by: "Agrupar por", group_none: "Sin agrupar", group_vendor: "Fabricante", group_model: "Nombre del dispositivo", group_class: "Clase de dispositivo", group_unknown: "Desconocido",
+    expand_all: "Expandir todo", collapse_all: "Contraer todo",
+    filters: "Filtros", filter_active: "{n} activos", filter_reset: "Restablecer todos los filtros", filter_remove: "Quitar filtro",
+    flt_all: "Todos", flt_status: "Estado", flt_online: "En línea", flt_offline: "Sin conexión",
+    flt_power: "Fuente de alimentación", flt_battery_only: "Solo dispositivos con batería", flt_mains_only: "Solo alimentados por la red eléctrica", flt_battery_low: "Batería baja",
+    flt_signal: "Señal", flt_sig_good: "Buena (−70 dBm o mejor)", flt_sig_mid: "Media (−85 a −71 dBm)", flt_sig_weak: "Débil (por debajo de −85 dBm)",
+    flt_network: "Red", flt_firmware: "Firmware", flt_fw_available: "Actualización disponible",
+    flt_seen: "Visto por última vez", flt_seen_24h: "Hace más de 24 horas", flt_seen_7d: "Hace más de 7 días",
+    flt_fabrics: "Ecosistemas", flt_fab_multi: "Varios ecosistemas (multi-admin)", flt_fab_single: "Un solo ecosistema",
+    flt_vendor: "Fabricante", flt_model: "Nombre del dispositivo", flt_class: "Clase de dispositivo",
+    flt_hint: "Varios filtros se aplican a la vez (Y). “En línea/Sin conexión” procede del Matter Server. Los filtros se aplican a Dispositivos, Batería y Actualizaciones.",
+    cls_light: "Luces", cls_switch: "Enchufes e interruptores", cls_climate: "Calefacción y clima", cls_cover: "Persianas y cortinas", cls_lock: "Cerraduras",
+    cls_fan: "Ventiladores", cls_remote: "Botones y mandos", cls_sensor: "Sensores", cls_appliance: "Electrodomésticos", cls_media: "Multimedia", cls_bridge: "Puentes", cls_other: "Otros",
+    // Funciones (expose), copiar entidades, imágenes de dispositivos (desde 1.0.3)
+    tab_functions: "Funciones",
+    fn_chip_all: "Con funciones", fn_chip_switch: "Conmutables", fn_chip_on: "Encendidos",
+    fn_none: "Aún no hay dispositivos con funciones.",
+    fn_hint: "Todas las funciones que Matter notifica de los dispositivos, con el valor actual. Los interruptores de encendido/apagado se pueden conmutar directamente y surten efecto de inmediato en el dispositivo. Todo lo demás es solo de visualización: contrólalo como hasta ahora mediante las entidades de Home Assistant.",
+    fn_hint_ro: "Todas las funciones que Matter notifica de los dispositivos, con el valor actual (solo visualización).",
+    sec_functions: "Funciones (expose)", no_functions: "Este dispositivo no notifica ninguna función.",
+    fn_on: "Encendido", fn_off: "Apagado", fn_present: "Presente", fn_absent: "Ausente",
+    fn_onoff: "Encendido/apagado", fn_level: "Nivel de brillo", fn_color_temp: "Temperatura de color", fn_lock: "Cerradura", fn_cover_closed: "Cerrado (posición)",
+    fn_temperature: "Temperatura", fn_target_heat: "Consigna de calefacción", fn_target_cool: "Consigna de refrigeración", fn_fan_percent: "Velocidad del ventilador",
+    fn_humidity: "Humedad", fn_pressure: "Presión atmosférica", fn_illuminance: "Iluminancia", fn_occupancy: "Presencia",
+    fn_v_locked: "Cerrada con llave", fn_v_unlocked: "Abierta", fn_v_not_fully_locked: "No del todo cerrada", fn_v_unlatched: "Pestillo retirado",
+    sec_entities: "Entidades (para automatizaciones)", no_entities: "No se han encontrado entidades de Home Assistant.",
+    entities_hint: "Nombres de entidades de Home Assistant. Usa el icono para copiar un nombre al portapapeles, por ejemplo para automatizaciones o scripts.",
+    copy: "Copiar al portapapeles", copy_all: "Copiar todo", copy_entities: "Copiar nombres de entidades",
+    copied: "Copiado: {v}", copied_n: "{n} entidades copiadas",
+    copy_failed: "No se pudo copiar. El navegador solo permite el acceso al portapapeles mediante HTTPS.", copy_manual: "Selecciona para copiar (Ctrl+C):",
+  },
 };
 
 // --- Styles -----------------------------------------------------------------
@@ -1391,9 +1508,69 @@ class MatterManagerCard extends HTMLElement {
     }
   }
 
+  // Ist gerade das Suchfeld aktiv, liefert diese Methode dessen Filterleiste. Das Suchfeld wird
+  // beim Neuzeichnen NICHT ersetzt: Ein neu erzeugtes Eingabefeld, das per Skript den Fokus
+  // bekommt, schließt auf dem Handy die Tastatur und lässt auf dem Desktop den Fokus los.
+  // Dann würde der nächste Buchstabe (z. B. „e“) bei Home Assistant als Tastenkürzel ankommen.
+  _searchKeeper() {
+    const el = this.shadowRoot.activeElement;
+    if (!el || !el.matches || !el.matches('input[data-fk="search"]')) return null;
+    const bar = el.closest(".filter-bar");
+    return bar && bar.parentNode?.classList?.contains("card-content") ? bar : null;
+  }
+
+  // Ersetzt alles vor und nach der Filterleiste durch den neuen Stand; die Leiste samt
+  // Suchfeld bleibt als dasselbe Element stehen. Gibt false zurück, wenn das nicht geht.
+  _patchAroundBar(keepBar, html) {
+    const tpl = document.createElement("template");
+    tpl.innerHTML = html;
+    const newCard = tpl.content.firstElementChild;
+    const liveCard = this._contentEl.querySelector("ha-card");
+    const newBar = newCard?.querySelector(".filter-bar");
+    const newContent = newBar?.parentNode;
+    if (
+      !liveCard ||
+      !liveCard.contains(keepBar) ||
+      !newBar?.querySelector('input[data-fk="search"]') ||
+      !newContent?.classList?.contains("card-content")
+    ) {
+      return false;
+    }
+    const header = newCard.getAttribute("header");
+    if (header === null) liveCard.removeAttribute("header");
+    else if (liveCard.getAttribute("header") !== header) liveCard.setAttribute("header", header);
+
+    const liveContent = keepBar.parentNode;
+    while (keepBar.previousSibling) keepBar.previousSibling.remove();
+    while (keepBar.nextSibling) keepBar.nextSibling.remove();
+    let before = true;
+    for (const node of Array.from(newContent.childNodes)) {
+      if (node === newBar) {
+        before = false;
+        continue;
+      }
+      if (before) liveContent.insertBefore(node, keepBar);
+      else liveContent.appendChild(node);
+    }
+    return true;
+  }
+
+  // <details> merkt sich seinen Zustand selbst; wir speichern ihn nur, damit
+  // er ein Neuzeichnen überlebt (kein _render() hier, sonst Endlosschleife).
+  _bindDetails() {
+    this.shadowRoot.querySelectorAll("details[data-k]").forEach((d) => {
+      if (d._mmBound) return;
+      d._mmBound = true;
+      d.addEventListener("toggle", () => {
+        this._open[d.dataset.k] = d.open;
+      });
+    });
+  }
+
   _render() {
     if (!this._config || !this._built) return;
-    const focus = this._captureFocus();
+    const keepBar = this._searchKeeper();
+    const focus = keepBar ? null : this._captureFocus();
     const visible = this._visibleTabs();
     if (!visible.includes(this._tab)) this._tab = visible[0];
 
@@ -1402,7 +1579,7 @@ class MatterManagerCard extends HTMLElement {
 
     const title = String(this._config.title ?? "").trim();
     const headerAttr = this._config.show_title === false || !title ? "" : ` header="${esc(title)}"`;
-    this._contentEl.innerHTML = `
+    const html = `
       <ha-card${headerAttr}>
         <div class="card-content">
           ${this._renderBanners()}
@@ -1411,14 +1588,14 @@ class MatterManagerCard extends HTMLElement {
         </div>
       </ha-card>`;
 
-    // <details> merkt sich seinen Zustand selbst; wir speichern ihn nur, damit
-    // er ein Neuzeichnen überlebt (kein _render() hier, sonst Endlosschleife).
-    this.shadowRoot.querySelectorAll("details[data-k]").forEach((d) => {
-      d.addEventListener("toggle", () => {
-        this._open[d.dataset.k] = d.open;
-      });
-    });
+    if (keepBar && this._patchAroundBar(keepBar, html)) {
+      this._bindDetails();
+      this._renderPopup();
+      return;
+    }
 
+    this._contentEl.innerHTML = html;
+    this._bindDetails();
     this._restoreFocus(focus);
     this._renderPopup();
   }
@@ -1729,6 +1906,7 @@ class MatterManagerCard extends HTMLElement {
     const search = cfg.show_search
       ? `<label class="filter-bar-field grow"><ha-icon icon="mdi:magnify" style="--mdc-icon-size:18px"></ha-icon>
            <input type="search" data-draft="search" data-fk="search" data-rerender="1"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
              placeholder="${esc(this._t("search"))}" value="${esc(this._drafts.search || "")}" /></label>`
       : "";
     const sort = cfg.show_filter_bar && withSort
@@ -3337,6 +3515,93 @@ class MatterManagerCardEditor extends HTMLElement {
 
 if (!customElements.get("matter-manager-card-editor")) {
   customElements.define("matter-manager-card-editor", MatterManagerCardEditor);
+}
+
+/**
+ * matter-manager-panel
+ * --------------------------------
+ * Seitenleisten-Eintrag (Vollbild): zeigt die Karte mit den Standardeinstellungen.
+ * Name und Ein-/Ausschalten stehen im Dialog „Konfigurieren“ der Integration; die
+ * Eintrags-ID kommt aus der Panel-Konfiguration (panel.config.entry_id).
+ */
+class MatterManagerPanel extends HTMLElement {
+  constructor() {
+    super();
+    this._hass = null;
+    this._panel = null;
+    this._narrow = false;
+    this._configured = false;
+  }
+
+  connectedCallback() {
+    this._build();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._menu) this._menu.hass = hass;
+    if (this._card && this._configured) this._card.hass = hass;
+  }
+
+  get hass() {
+    return this._hass;
+  }
+
+  set narrow(value) {
+    this._narrow = Boolean(value);
+    if (this._menu) this._menu.narrow = this._narrow;
+  }
+
+  set route(_route) {
+    /* wird nicht benötigt */
+  }
+
+  set panel(panel) {
+    this._panel = panel;
+    this._apply();
+  }
+
+  _build() {
+    if (this._root) return;
+    this._root = this.attachShadow({ mode: "open" });
+    this._root.innerHTML = `
+      <style>
+        :host { display: flex; flex-direction: column; height: 100%; background: var(--primary-background-color, #fafafa); }
+        .bar { flex: none; display: flex; align-items: center; gap: 4px; box-sizing: border-box; height: 56px; padding: 0 12px;
+          background: var(--app-header-background-color, var(--primary-color, #03a9f4)); color: var(--app-header-text-color, #fff);
+          font-size: 20px; font-weight: 400; }
+        .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 4px; }
+        .body { flex: 1; overflow: auto; padding: 16px; box-sizing: border-box; }
+        .inner { max-width: 1200px; margin: 0 auto; }
+      </style>
+      <div class="bar"><ha-menu-button></ha-menu-button><div class="title"></div></div>
+      <div class="body"><div class="inner"></div></div>`;
+    this._menu = this._root.querySelector("ha-menu-button");
+    this._titleEl = this._root.querySelector(".title");
+    this._inner = this._root.querySelector(".inner");
+    this._card = document.createElement("matter-manager-card");
+    this._inner.appendChild(this._card);
+    if (this._hass) this._menu.hass = this._hass;
+    this._menu.narrow = this._narrow;
+    this._apply();
+  }
+
+  _apply() {
+    if (!this._card || !this._panel) return;
+    const cfg = this._panel.config || {};
+    this._titleEl.textContent = String(this._panel.title || "Matter Manager");
+    if (!this._configured) {
+      const config = { title: "", show_title: false };
+      if (typeof cfg.entry_id === "string" && cfg.entry_id) config.entry_id = cfg.entry_id;
+      this._card.setConfig(config);
+      this._configured = true;
+      if (this._hass) this._card.hass = this._hass;
+    }
+  }
+}
+
+if (!customElements.get("matter-manager-panel")) {
+  customElements.define("matter-manager-panel", MatterManagerPanel);
 }
 
 window.customCards = window.customCards || [];

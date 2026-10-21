@@ -1,8 +1,23 @@
-[🇩🇪 Deutsch](README.md) · [🇬🇧 English](README.en.md) · [🇳🇱 Nederlands](README.nl.md) · 🇫🇷 Français
+<h2 align="center"><a href="README.md">🇩🇪 Deutsch</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.en.md">🇬🇧 English</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.nl.md">🇳🇱 Nederlands</a>&nbsp;&nbsp;·&nbsp;&nbsp;🇫🇷 <b>[ Français ]</b>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.es.md">🇪🇸 Español</a></h2>
+
+<p align="center"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/matter-manager-banner.webp" alt="Matter Manager" width="420"></p>
 
 # Matter Manager pour Home Assistant
 
 Gérer les appareils Matter sans quitter Home Assistant : appareils, batteries, mises à jour de firmware, fabrics (multi-admin), bindings et Matter Server dans une carte de tableau de bord – en tant qu'intégration HACS. La structure et le design correspondent au [Zigbee2MQTT Manager](https://github.com/Meine-smarte-Welt/zigbee2mqtt_manager) : catégories avec icônes, listes en lignes, fenêtre de détail, sections en accordéon, éditeur graphique et couleurs librement ajustables.
+
+📖 **Article détaillé avec guide et contexte (en allemand) :** [Matter Manager pour Home Assistant sur Meine smarte Welt](https://meinesmartewelt.de/matter-manager-home-assistant/)
+
+## Captures d'écran
+
+<table>
+<tr>
+<td align="center" valign="top"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/screenshot-geraeteuebersicht.webp" alt="Vue d'ensemble des appareils avec puces de statistiques, recherche, tri et filtres" width="340"><br><sub>Vue d'ensemble des appareils avec puces de statistiques, recherche, tri et filtres</sub></td>
+<td align="center" valign="top"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/screenshot-karten-editor.webp" alt="Éditeur de carte avec bloc de version et catégories" width="340"><br><sub>Éditeur de carte avec bloc de version et catégories</sub></td>
+</tr>
+</table>
+
+<sub>Les captures d'écran proviennent de la version 1.0.3.</sub>
 
 ## Sommaire
 
@@ -42,6 +57,7 @@ La carte comporte sept catégories dans une barre d'icônes (sous environ 480 px
 Autres points :
 
 - **Équivalents Matter au lieu des termes Zigbee :** la disponibilité provient du Matter Server, la force du signal est une valeur RSSI en dBm (Wi-Fi ou Thread), les groupes sont remplacés par les fabrics, le « coordinateur » est le Matter Server.
+- **Entrée propre dans la barre latérale (nouveau en 1.1.1) :** Matter Manager apparaît comme entrée à part dans la barre latérale de Home Assistant. Le nom est libre (par défaut « Matter Manager ») et se modifie dans la boîte de dialogue **Configurer** ; avec plusieurs entrées, chacune peut être nommée séparément. L'entrée peut aussi être masquée.
 - **Appareils derrière des bridges** (p. ex. un bridge Hue) apparaissent séparément ; renommer et commuter des fonctions est possible, firmware, bindings et fabrics restent verrouillés.
 - **Images d'appareils :** Une petite image de l'appareil apparaît à côté de chaque ligne et dans la fenêtre. Matter ne fournit pas d'images de produits ; la carte essaie donc successivement des noms d'image formés du numéro de pièce, du nom du produit et du modèle auprès de la bibliothèque d'images du projet Zigbee2MQTT (`https://www.zigbee2mqtt.io/images/devices/<modèle>.png`). Si tout échoue, l'icône par type d'appareil s'affiche. **Confidentialité :** votre navigateur (pas Home Assistant) demande les images à `zigbee2mqtt.io` et lui transmet ainsi le numéro de pièce ou le nom du produit des appareils. Avec `show_images: false`, rien n'est demandé ; `image_base` pointe vers votre propre serveur (p. ex. `/local/appareils`), `device_images` attribue des URL d'image propres à des appareils individuels (YAML uniquement).
 - **Fonctions et presse-papiers :** Les interrupteurs ne sont commutés que par les commandes Matter « On »/« Off » du cluster OnOff. Les serrures ne peuvent volontairement pas être commandées. Dans la fenêtre, le bouton par entité (ou « Tout copier ») copie l'ID de l'entité dans le presse-papiers ; si l'accès est bloqué (p. ex. sans HTTPS), un champ de texte pour la copie manuelle apparaît.
@@ -50,7 +66,7 @@ Autres points :
 - **Confirmation en deux clics** au lieu d'une boîte de dialogue du navigateur pour les actions risquées (supprimer, mettre à jour, reconnecter, dissocier).
 - **Lecture seule :** `read_only: true` masque tous les éléments de commande qui modifient quelque chose (tablettes murales).
 - **Zoom :** `zoom` met à l'échelle toute la carte.
-- **Langues :** allemand, anglais, néerlandais et français (intégration et carte, selon la langue de Home Assistant).
+- **Langues :** allemand, anglais, néerlandais, français et espagnol (intégration et carte, selon la langue de Home Assistant).
 - **Téléchargement des diagnostics** avec noms et ID anonymisés.
 
 ## Prérequis
@@ -199,20 +215,21 @@ Si les versions de la carte et de l'intégration diffèrent (cache de navigateur
 
 ## Paramètres de l'intégration
 
-Sous **Configurer** (avec affichage de la version installée) : seuil « batterie faible », seuil « batterie critique » (doit être inférieur ou égal) et événements activés/désactivés. **Reconfigurer** permet de modifier l'adresse du Matter Server.
+Sous **Configurer** (avec affichage de la version installée) : seuil « batterie faible », seuil « batterie critique » (doit être inférieur ou égal) et événements activés/désactivés, ainsi que **Afficher l'entrée dans la barre latérale** et **Nom dans la barre latérale** (40 caractères maximum, par défaut « Matter Manager »). **Reconfigurer** permet de modifier l'adresse du Matter Server.
 
 La boîte de dialogue contient aussi **Envoyer des messages au Notification Center** (interrupteur principal) et **Types de messages à envoyer** (voir [Notification Center](#notification-center-optionnel)). Les modifications de ces deux réglages sont appliquées sans recharger l'intégration.
 
 ## Sécurité
 
-Toutes les actions d'écriture (renommer, commentaires, supprimer, commuter des fonctions, firmware, bindings, fabrics, ajouter un appareil, reconnecter, vérification de version) et le chargement des détails de l'appareil sont limités aux **administrateurs** via WebSocket. Les saisies sont vérifiées par le backend (format du code d'installation, longueur du nom et du commentaire, appareils connus, impossibilité de supprimer son propre fabric). Lors de la création d'un binding, une entrée d'accès (ACL) n'est ajoutée sur l'appareil cible que si une entrée administrateur via CASE y existe déjà, afin que Home Assistant ne perde jamais l'accès. La carte échappe tous les textes ; les valeurs de couleur passent par une liste blanche. Le code d'installation affiché d'une fenêtre d'appairage ouverte n'est visible que par les administrateurs et n'est valable que cinq minutes. La commutation est limitée à marche/arrêt du cluster OnOff, la valeur doit être un booléen et l'appareil doit être joignable ; les serrures et toutes les autres fonctions sont en lecture seule. Les adresses d'image de `device_images` et `image_base` sont vérifiées contre les schémas dangereux (p. ex. `javascript:`).
+Toutes les actions d'écriture (renommer, commentaires, supprimer, commuter des fonctions, firmware, bindings, fabrics, ajouter un appareil, reconnecter, vérification de version) et le chargement des détails de l'appareil sont limités aux **administrateurs** via WebSocket. Les saisies sont vérifiées par le backend (format du code d'installation, longueur du nom et du commentaire, appareils connus, impossibilité de supprimer son propre fabric). Lors de la création d'un binding, une entrée d'accès (ACL) n'est ajoutée sur l'appareil cible que si une entrée administrateur via CASE y existe déjà, afin que Home Assistant ne perde jamais l'accès. La carte échappe tous les textes ; les valeurs de couleur passent par une liste blanche. Le code d'installation affiché d'une fenêtre d'appairage ouverte n'est visible que par les administrateurs et n'est valable que cinq minutes. La commutation est limitée à marche/arrêt du cluster OnOff, la valeur doit être un booléen et l'appareil doit être joignable ; les serrures et toutes les autres fonctions sont en lecture seule. Les adresses d'image de `device_images` et `image_base` sont vérifiées contre les schémas dangereux (p. ex. `javascript:`). Le nom dans la barre latérale est affiché comme texte, jamais comme HTML, et limité à 40 caractères.
 
 Les interrupteurs du Notification Center ne peuvent être modifiés par WebSocket que par un **administrateur** ; le type de message est vérifié par rapport à la liste des types connus. Les messages ne contiennent que des noms d'appareils et des valeurs comme le niveau de batterie.
 
 ## Limitations connues
 
-- **La version 1.1.0 n'a été testée qu'avec des données simulées et un serveur Matter simulé, pas sur du matériel réel.** Le développement s'est fait contre l'interface WebSocket documentée de python-matter-server.
-- **Notification Center :** La liaison n'a été testée qu'avec un bus d'événements simulé, pas avec un vrai Notification Center. La carte et la boîte de dialogue de l'intégration sont traduites en allemand, anglais, néerlandais et français ; pour l'espagnol, l'intégration ne fournit que les textes de messages au Notification Center, la carte affiche alors l'anglais.
+- **La version 1.1.1 n'a été testée qu'avec des données simulées et un serveur Matter simulé, pas sur du matériel réel.** Le développement s'est fait contre l'interface WebSocket documentée de python-matter-server.
+- **Notification Center :** La liaison n'a été testée qu'avec un bus d'événements simulé, pas avec un vrai Notification Center.
+- **Barre latérale et champ de recherche :** le comportement du champ de recherche (le focus est conservé pendant la saisie, pas de raccourcis de Home Assistant) a été vérifié dans un Chromium sans interface, pas sur un téléphone ni dans l'application Home Assistant. L'entrée de la barre latérale n'a pas été testée sur un vrai Home Assistant.
 - **Fabricant et nom de l'appareil** proviennent des données de base de l'appareil (nom du fabricant et nom du produit). Si le nom du produit commence par le nom du fabricant, celui-ci est retiré ; si le fabricant manque, il n'est reconnu que si un autre appareil indique le même nom de fabricant. Sans ces valeurs, l'appareil apparaît sous « Inconnu ». La classe d'appareil provient des types d'appareil des points de terminaison ; les appareils de type inconnu vont dans « Autres ». Les deux n'ont été vérifiés qu'avec des données simulées.
 - **Les commandes Matter en écriture ne sont pas testées :** le format de `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` et `remove_matter_fabric` peut varier selon la version du Matter Server. La fonction reste alors sans effet ou signale une erreur – les fonctions en lecture ne sont pas concernées.
 - **Pas de groupes :** les groupes Zigbee n'ont pas d'équivalent Matter direct pour cette interface ; la catégorie s'appelle donc « Fabrics ».
@@ -231,12 +248,14 @@ Les interrupteurs du Notification Center ne peuvent être modifiés par WebSocke
 - **« Version du Matter Server trop ancienne » :** mettre à jour le Matter Server (schéma d'API 8 ou plus récent).
 - **Aucune valeur de signal :** seuls les appareils Wi-Fi et Thread la signalent ; certains appareils ne la fournissent pas.
 - **« Aucune connexion à l'intégration » :** l'intégration est-elle chargée ? `entry_id` est-il correct ?
+- **Deux entrées identiques dans la barre latérale :** avec plusieurs entrées Matter Manager, donnez à chacune un nom différent sous **Configurer → Nom dans la barre latérale**.
 - Journaux : mettre `custom_components.matter_manager` sur `debug`.
 
 ## Historique des versions
 
 | Version | Modification |
 |---|---|
+| **1.1.1** | Nouveau : **entrée propre dans la barre latérale** avec un nom libre (par défaut « Matter Manager », 40 caractères maximum, désactivable) dans la boîte de dialogue Configurer ; avec plusieurs entrées, on n'obtient plus deux entrées identiques. **Espagnol** (intégration, carte, README). README avec drapeaux, captures d'écran et lien vers l'article de blog. Corrigé : dans le champ de recherche de la vue des appareils, la carte ne remplace plus le champ pendant la saisie – sur téléphone, le clavier ne se ferme plus après chaque lettre, sur ordinateur le champ garde le focus ; la lettre suivante n'atteint ainsi plus les raccourcis de Home Assistant (« e » = entités). Testé uniquement avec des données simulées et dans un navigateur sans interface, pas sur du matériel réel |
 | **1.1.0** | Nouveau : **commentaires** dans la fenêtre de l'appareil (modifiables, interrogeables, modifiables uniquement par les administrateurs) ; liaison optionnelle avec le **Notification Center** (interface « schéma 1 » via le bus d'événements) : types de messages serveur injoignable, appareil hors ligne, batterie critique/faible, mise à jour du firmware, appareil nouveau/supprimé ; interrupteur principal et interrupteur par type de message dans la carte (Serveur → Notification Center) et dans la boîte de dialogue Configurer, triés par urgence. Corrigé : la saisie dans les champs de la carte (p. ex. « e » dans le champ du nom) ne déclenche plus les raccourcis clavier de Home Assistant comme la recherche d'entités. Modifié : le registre des appareils est interrogé sans `device_registry.devices`, supprimé à partir de Home Assistant 2027.9. Testé uniquement avec des données simulées, pas avec un vrai Notification Center ni sur du matériel réel |
 | **1.0.3** | Nouveau : petites images d'appareils (candidats de la bibliothèque d'images Zigbee2MQTT, désactivables, dossier d'images propre possible), catégorie **Fonctions** avec interrupteurs marche/arrêt commutables et valeurs mesurées, sections Fonctions et Entités dans la fenêtre de l'appareil avec copie dans le presse-papiers. Nouvelles clés `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Testé uniquement avec des données simulées et dans un navigateur headless, pas sur du matériel réel |
 | **1.0.2** | Chemin de la ressource de la carte corrigé : `/matter_manager/matter-manager-card.js` au lieu de `/matter_manager_files/…` (les entrées existantes sont migrées automatiquement). Fabricant et nom de l'appareil sont lus dans la désignation du type. Nouveau : filtres et regroupement (fabricant, nom de l'appareil, classe d'appareil) comme dans le Zigbee2MQTT Manager. Français (pull request #1) |
@@ -252,13 +271,14 @@ Les fichiers JSON n'ont pas de commentaires. Leurs hachages SHA-256 (sur le fich
 | Fichier | SHA-256 |
 |---|---|
 | `hacs.json` | `e719b176c5b44ea120e0d895d0719225612e43ab3ca6f462f98793383909ff5a` |
-| `custom_components/matter_manager/manifest.json` | `78026e39a42512c9fac2fad2878827c4c6d28cf1337262b224f52aabdacfd28d` |
-| `custom_components/matter_manager/strings.json` | `4e01f329df028416c3f0a01f1ffae7368696d5174ee79cf9a1df0913d7f84ef6` |
+| `custom_components/matter_manager/manifest.json` | `f5a446c4adb95153a2517d1cee8ca2da878d28a739c4ab723a82c07dc7ca878c` |
+| `custom_components/matter_manager/strings.json` | `5b1273162c6c691c41cbbba724f52785b32601475f876836abcf3363e3eabb1c` |
 | `custom_components/matter_manager/icons.json` | `6737652d58ff71ed9df9eecfde362f6a0f62d7b2b7243d985e1f06020e3c9eb5` |
-| `custom_components/matter_manager/translations/de.json` | `4e01f329df028416c3f0a01f1ffae7368696d5174ee79cf9a1df0913d7f84ef6` |
-| `custom_components/matter_manager/translations/en.json` | `409d24178aa5e42827326f9ee89ba282a1331ff47b00701f960cdb18b4a1e505` |
-| `custom_components/matter_manager/translations/nl.json` | `24ea02457146820b528ae61fb196df9447652a07d58c9b6b602f89fbd151d0e4` |
-| `custom_components/matter_manager/translations/fr.json` | `88009891904b872bc1e1c5f5c166ce1f58cdcaa482573eef3b4466e256a7608a` |
+| `custom_components/matter_manager/translations/de.json` | `5b1273162c6c691c41cbbba724f52785b32601475f876836abcf3363e3eabb1c` |
+| `custom_components/matter_manager/translations/en.json` | `591158d30276bf36344f0fd85814b622bd7b87fb199398b5a2eb584475ede14c` |
+| `custom_components/matter_manager/translations/nl.json` | `202e981c21c580d0563cb02721bb7d84e527a201ea22355a26d32ee8fb237b23` |
+| `custom_components/matter_manager/translations/fr.json` | `2e5c09a969e4938f86bd111ca7176d87e29c5b45a6ed239ba5a18d205aa51321` |
+| `custom_components/matter_manager/translations/es.json` | `e7d913dd82fa025acd6c2d0491b70065b229c8168a50bfcf4d042af9750780cd` |
 
 ## Licence
 

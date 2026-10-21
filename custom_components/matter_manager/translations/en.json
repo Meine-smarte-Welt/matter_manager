@@ -41,19 +41,24 @@
           "low_battery_threshold": "Threshold for “low battery” (%)",
           "critical_battery_threshold": "Threshold for “critical battery” (%)",
           "fire_events": "Fire Home Assistant events",
+          "sidebar_enabled": "Show entry in the sidebar",
+          "sidebar_title": "Sidebar name",
           "nc_enabled": "Send messages to the Notification Center",
           "nc_types": "Message types to send"
         },
         "data_description": {
           "critical_battery_threshold": "Must be less than or equal to the “low battery” threshold.",
           "fire_events": "Fires e.g. matter_manager_device_offline, _battery_low and _update_available – usable as automation triggers.",
+          "sidebar_enabled": "Shows Matter Manager as its own entry in the Home Assistant sidebar.",
+          "sidebar_title": "Free text, at most 40 characters. Default: Matter Manager. With several entries you can name each one clearly.",
           "nc_enabled": "Only has an effect if the Notification Center is installed. Without it, nothing happens.",
           "nc_types": "Sorted by urgency. Deselected types are not sent."
         }
       }
     },
     "error": {
-      "critical_above_low": "The critical threshold must not exceed the “low” threshold."
+      "critical_above_low": "The critical threshold must not exceed the “low” threshold.",
+      "sidebar_title_too_long": "The name must not be longer than 40 characters."
     }
   },
   "entity": {

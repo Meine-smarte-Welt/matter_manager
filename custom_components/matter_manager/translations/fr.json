@@ -41,19 +41,24 @@
           "low_battery_threshold": "Seuil pour « batterie faible » (%)",
           "critical_battery_threshold": "Seuil pour « batterie critique » (%)",
           "fire_events": "Déclencher les événements Home Assistant",
+          "sidebar_enabled": "Afficher l'entrée dans la barre latérale",
+          "sidebar_title": "Nom dans la barre latérale",
           "nc_enabled": "Envoyer des messages au Notification Center",
           "nc_types": "Types de messages à envoyer"
         },
         "data_description": {
           "critical_battery_threshold": "Doit être inférieur ou égal au seuil « batterie faible ».",
           "fire_events": "Déclenche p. ex. matter_manager_device_offline, _battery_low et _update_available – utilisables comme déclencheurs d'automatisation.",
+          "sidebar_enabled": "Affiche Matter Manager comme entrée distincte dans la barre latérale de Home Assistant.",
+          "sidebar_title": "Libre, 40 caractères au maximum. Par défaut : Matter Manager. Avec plusieurs entrées, vous pouvez nommer chacune clairement.",
           "nc_enabled": "N'a d'effet que si le Notification Center est installé. Sans lui, rien ne se passe.",
           "nc_types": "Triés par urgence. Les types désélectionnés ne sont pas envoyés."
         }
       }
     },
     "error": {
-      "critical_above_low": "Le seuil critique ne doit pas dépasser le seuil « faible »."
+      "critical_above_low": "Le seuil critique ne doit pas dépasser le seuil « faible ».",
+      "sidebar_title_too_long": "Le nom ne doit pas dépasser 40 caractères."
     }
   },
   "entity": {

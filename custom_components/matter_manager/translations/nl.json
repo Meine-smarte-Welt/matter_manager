@@ -41,19 +41,24 @@
           "low_battery_threshold": "Drempel voor „batterij bijna leeg” (%)",
           "critical_battery_threshold": "Drempel voor „batterij kritiek” (%)",
           "fire_events": "Home Assistant-gebeurtenissen activeren",
+          "sidebar_enabled": "Item in de zijbalk tonen",
+          "sidebar_title": "Naam in de zijbalk",
           "nc_enabled": "Meldingen naar het Notification Center sturen",
           "nc_types": "Te verzenden meldingstypen"
         },
         "data_description": {
           "critical_battery_threshold": "Moet kleiner dan of gelijk aan de drempel voor „batterij bijna leeg” zijn.",
           "fire_events": "Activeert o.a. matter_manager_device_offline, _battery_low en _update_available – bruikbaar als trigger voor automatiseringen.",
+          "sidebar_enabled": "Toont de Matter Manager als eigen item in de zijbalk van Home Assistant.",
+          "sidebar_title": "Vrij te kiezen, maximaal 40 tekens. Standaard: Matter Manager. Bij meerdere items kun je elk item een duidelijke naam geven.",
           "nc_enabled": "Werkt alleen als het Notification Center is geïnstalleerd. Zonder gebeurt er niets.",
           "nc_types": "Gesorteerd op urgentie. Niet-geselecteerde typen worden niet verzonden."
         }
       }
     },
     "error": {
-      "critical_above_low": "De kritieke drempel mag niet hoger zijn dan de drempel voor „bijna leeg”."
+      "critical_above_low": "De kritieke drempel mag niet hoger zijn dan de drempel voor „bijna leeg”.",
+      "sidebar_title_too_long": "De naam mag maximaal 40 tekens lang zijn."
     }
   },
   "entity": {

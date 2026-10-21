@@ -1,8 +1,23 @@
-[🇩🇪 Deutsch](README.md) · [🇬🇧 English](README.en.md) · 🇳🇱 Nederlands · [🇫🇷 Français](README.fr.md)
+<h2 align="center"><a href="README.md">🇩🇪 Deutsch</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.en.md">🇬🇧 English</a>&nbsp;&nbsp;·&nbsp;&nbsp;🇳🇱 <b>[ Nederlands ]</b>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.fr.md">🇫🇷 Français</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.es.md">🇪🇸 Español</a></h2>
+
+<p align="center"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/matter-manager-banner.webp" alt="Matter Manager" width="420"></p>
 
 # Matter Manager voor Home Assistant
 
 Beheer Matter-apparaten zonder Home Assistant te verlaten: apparaten, batterijen, firmware-updates, fabrics (multi-admin), bindings en de Matter Server in één dashboardkaart – als HACS-integratie. Opbouw en ontwerp zijn gelijk aan de [Zigbee2MQTT Manager](https://github.com/Meine-smarte-Welt/zigbee2mqtt_manager): categorieën met pictogrammen, rijlijsten, detailpopup, accordeonsecties, grafische editor en vrij instelbare kleuren.
+
+📖 **Uitgebreid artikel met handleiding en achtergronden (in het Duits):** [Matter Manager voor Home Assistant op Meine smarte Welt](https://meinesmartewelt.de/matter-manager-home-assistant/)
+
+## Schermafbeeldingen
+
+<table>
+<tr>
+<td align="center" valign="top"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/screenshot-geraeteuebersicht.webp" alt="Apparatenoverzicht met statistiekchips, zoeken, sorteren en filters" width="340"><br><sub>Apparatenoverzicht met statistiekchips, zoeken, sorteren en filters</sub></td>
+<td align="center" valign="top"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/screenshot-karten-editor.webp" alt="Kaarteditor met versieblok en categorieën" width="340"><br><sub>Kaarteditor met versieblok en categorieën</sub></td>
+</tr>
+</table>
+
+<sub>De schermafbeeldingen komen uit versie 1.0.3.</sub>
 
 ## Inhoud
 
@@ -42,6 +57,7 @@ De kaart heeft zeven categorieën in een pictogrammenbalk (onder ca. 480 px kaar
 Meer punten:
 
 - **Matter-equivalenten in plaats van Zigbee-termen:** beschikbaarheid komt van de Matter Server, de signaalsterkte is een RSSI-waarde in dBm (wifi of Thread), groepen worden vervangen door fabrics, de „coördinator” is de Matter Server.
+- **Eigen item in de zijbalk (nieuw in 1.1.1):** Matter Manager verschijnt als eigen item in de zijbalk van Home Assistant. De naam is vrij te kiezen (standaard „Matter Manager”) en wordt gewijzigd in het dialoogvenster **Configureren**; bij meerdere items kun je elk item apart een naam geven. Het item kan ook worden verborgen.
 - **Apparaten achter bridges** (bijv. een Hue-bridge) verschijnen afzonderlijk; hernoemen en functies schakelen is mogelijk, firmware, bindings en fabrics blijven vergrendeld.
 - **Apparaatafbeeldingen:** Naast elke rij en in de popup staat een kleine afbeelding van het apparaat. Matter levert geen productafbeeldingen; de kaart probeert daarom achtereenvolgens afbeeldingsnamen uit onderdeelnummer, productnaam en model tegen de afbeeldingenbibliotheek van het Zigbee2MQTT-project (`https://www.zigbee2mqtt.io/images/devices/<model>.png`). Lukt niets, dan verschijnt het pictogram per apparaattype. **Privacy:** je browser (niet Home Assistant) vraagt afbeeldingen op bij `zigbee2mqtt.io` en verstuurt daarbij het onderdeelnummer of de productnaam van de apparaten. Met `show_images: false` wordt niets opgevraagd; `image_base` wijst naar een eigen server (bijv. `/local/apparaten`), `device_images` wijst aan afzonderlijke apparaten eigen afbeeldings-URL's toe (alleen YAML).
 - **Functies en klembord:** Schakelaars worden alleen geschakeld via de Matter-commando's „On”/„Off” van het OnOff-cluster. Sloten kunnen bewust niet worden bediend. In de popup kopieert de knop per entiteit (of „Alles kopiëren”) de entiteits-ID naar het klembord; is toegang geblokkeerd (bijv. zonder HTTPS), dan verschijnt een tekstveld om handmatig te kopiëren.
@@ -50,7 +66,7 @@ Meer punten:
 - **Bevestiging met twee klikken** in plaats van een browserdialoog bij riskante acties (verwijderen, update, opnieuw verbinden, loskoppelen).
 - **Alleen-lezen:** `read_only: true` verbergt alle bedieningselementen die iets wijzigen (wandtablets).
 - **Zoom:** `zoom` schaalt de hele kaart.
-- **Talen:** Duits, Engels, Nederlands en Frans (integratie en kaart, volgens de taal van Home Assistant).
+- **Talen:** Nederlands, Duits, Engels, Frans en Spaans (integratie en kaart, volgens de taal van Home Assistant).
 - **Diagnosedownload** met geanonimiseerde namen en ID's.
 
 ## Vereisten
@@ -199,20 +215,21 @@ Verschillen de versies van kaart en integratie (verouderde browsercache), dan wo
 
 ## Instellingen van de integratie
 
-Onder **Configureren** (met weergave van de geïnstalleerde versie): drempel „batterij bijna leeg”, drempel „batterij kritiek” (moet kleiner dan of gelijk zijn) en gebeurtenissen aan/uit. Via **Opnieuw configureren** wijzig je het adres van de Matter Server.
+Onder **Configureren** (met weergave van de geïnstalleerde versie): drempel „batterij bijna leeg”, drempel „batterij kritiek” (moet kleiner dan of gelijk zijn) en gebeurtenissen aan/uit, plus **Item in de zijbalk tonen** en **Naam in de zijbalk** (maximaal 40 tekens, standaard „Matter Manager”). Via **Opnieuw configureren** wijzig je het adres van de Matter Server.
 
 In het dialoogvenster staan ook **Meldingen naar het Notification Center sturen** (hoofdschakelaar) en **Te verzenden meldingstypen** (zie [Notification Center](#notification-center-optioneel)). Wijzigingen aan deze twee schakelaars worden toegepast zonder de integratie opnieuw te laden.
 
 ## Beveiliging
 
-Alle schrijfacties (hernoemen, opmerkingen, verwijderen, functies schakelen, firmware, bindings, fabrics, apparaat toevoegen, opnieuw verbinden, versiecontrole) en het laden van de apparaatdetails zijn via WebSocket beperkt tot **beheerders**. Invoer wordt door de backend gecontroleerd (formaat van de setupcode, naam- en opmerkinglengte, bekende apparaten, eigen fabric kan niet worden verwijderd). Bij het aanmaken van een binding wordt alleen een toegangsitem (ACL) op het doelapparaat toegevoegd als daar al een beheerdersitem via CASE bestaat, zodat Home Assistant nooit de toegang verliest. De kaart maskeert alle teksten; kleurwaarden lopen door een allowlist. De getoonde setupcode van een open koppelvenster is alleen zichtbaar voor beheerders en vijf minuten geldig. Schakelen is beperkt tot aan/uit van het OnOff-cluster, de waarde moet een booleaanse waarde zijn en het apparaat moet bereikbaar zijn; sloten en alle andere functies zijn alleen-lezen. Afbeeldingsadressen uit `device_images` en `image_base` worden gecontroleerd op onveilige schema's (bijv. `javascript:`).
+Alle schrijfacties (hernoemen, opmerkingen, verwijderen, functies schakelen, firmware, bindings, fabrics, apparaat toevoegen, opnieuw verbinden, versiecontrole) en het laden van de apparaatdetails zijn via WebSocket beperkt tot **beheerders**. Invoer wordt door de backend gecontroleerd (formaat van de setupcode, naam- en opmerkinglengte, bekende apparaten, eigen fabric kan niet worden verwijderd). Bij het aanmaken van een binding wordt alleen een toegangsitem (ACL) op het doelapparaat toegevoegd als daar al een beheerdersitem via CASE bestaat, zodat Home Assistant nooit de toegang verliest. De kaart maskeert alle teksten; kleurwaarden lopen door een allowlist. De getoonde setupcode van een open koppelvenster is alleen zichtbaar voor beheerders en vijf minuten geldig. Schakelen is beperkt tot aan/uit van het OnOff-cluster, de waarde moet een booleaanse waarde zijn en het apparaat moet bereikbaar zijn; sloten en alle andere functies zijn alleen-lezen. Afbeeldingsadressen uit `device_images` en `image_base` worden gecontroleerd op onveilige schema's (bijv. `javascript:`). De naam in de zijbalk wordt als tekst getoond, nooit als HTML, en is beperkt tot 40 tekens.
 
 De schakelaars voor het Notification Center kunnen via WebSocket alleen door een **beheerder** worden gewijzigd; het meldingstype wordt gecontroleerd tegen de lijst van bekende typen. Meldingen bevatten alleen apparaatnamen en waarden zoals het batterijniveau.
 
 ## Bekende beperkingen
 
-- **Versie 1.1.0 is alleen getest met gesimuleerde gegevens en een gesimuleerde Matter-server, niet op echte hardware.** Ontwikkeld tegen de gedocumenteerde WebSocket-interface van python-matter-server.
-- **Notification Center:** De koppeling is alleen getest met een gesimuleerde eventbus, niet met een echt Notification Center. Kaart en integratiedialoog zijn vertaald in het Nederlands, Duits, Engels en Frans; voor Spaans levert de integratie alleen de meldingsteksten aan het Notification Center, de kaart toont dan Engels.
+- **Versie 1.1.1 is alleen getest met gesimuleerde gegevens en een gesimuleerde Matter-server, niet op echte hardware.** Ontwikkeld tegen de gedocumenteerde WebSocket-interface van python-matter-server.
+- **Notification Center:** De koppeling is alleen getest met een gesimuleerde eventbus, niet met een echt Notification Center.
+- **Zijbalk en zoekveld:** Het gedrag van het zoekveld (focus blijft behouden tijdens het typen, geen sneltoetsen van Home Assistant) is gecontroleerd in een headless Chromium, niet op een telefoon en niet in de Home Assistant-app. Het zijbalkitem is niet getest op een echte Home Assistant.
 - **Fabrikant en apparaatnaam** komen uit de basisgegevens van het apparaat (fabrikantnaam en productnaam). Begint de productnaam met de fabrikantnaam, dan wordt die eraf gehaald; ontbreekt de fabrikant, dan wordt deze alleen herkend als een ander apparaat dezelfde fabrikantnaam meldt. Zonder deze gegevens verschijnt het apparaat onder „Onbekend”. De apparaatklasse komt uit de apparaattypen van de endpoints; apparaten met een onbekend type komen onder „Overig”. Beide zijn alleen met gesimuleerde gegevens gecontroleerd.
 - **Schrijvende Matter-commando's zijn ongetest:** het formaat van `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` en `remove_matter_fabric` kan per versie van de Matter Server verschillen. Dan heeft de functie geen effect of meldt hij een fout – lezende functies worden hierdoor niet beïnvloed.
 - **Geen groepen:** Zigbee-groepen hebben in Matter geen directe equivalent voor deze interface; de categorie heet daarom „Fabrics”.
@@ -231,12 +248,14 @@ De schakelaars voor het Notification Center kunnen via WebSocket alleen door een
 - **„Matter Server-versie te oud”:** werk de Matter Server bij (API-schema 8 of nieuwer).
 - **Geen signaalwaarde:** alleen wifi- en Thread-apparaten melden die; sommige apparaten leveren hem niet.
 - **„Geen verbinding met de integratie”:** is de integratie geladen? Klopt `entry_id`?
+- **Twee gelijk ogende items in de zijbalk:** geef bij meerdere Matter Manager-items elk een andere naam onder **Configureren → Naam in de zijbalk**.
 - Logs: zet `custom_components.matter_manager` op `debug`.
 
 ## Versiegeschiedenis
 
 | Versie | Wijziging |
 |---|---|
+| **1.1.1** | Nieuw: **eigen item in de zijbalk** met vrij te kiezen naam (standaard „Matter Manager”, maximaal 40 tekens, uit te schakelen) in het dialoogvenster Configureren; bij meerdere items zijn er zo geen twee gelijk ogende items meer. **Spaans** (integratie, kaart, README). README met vlaggen, schermafbeeldingen en link naar het blogbericht. Opgelost: in het zoekveld van het apparatenoverzicht vervangt de kaart het invoerveld niet meer tijdens het typen – op de telefoon sluit het toetsenbord niet meer na elke letter, op de desktop behoudt het veld de focus; zo komt de volgende letter ook niet meer bij de sneltoetsen van Home Assistant terecht („e” = entiteiten). Alleen getest met gesimuleerde gegevens en in een headless browser, niet op echte hardware |
 | **1.1.0** | Nieuw: **opmerkingen** in de apparaatpopup (bewerkbaar, doorzoekbaar, alleen door beheerders te wijzigen); optionele koppeling met het **Notification Center** (interface “schema 1” via de eventbus): meldingstypen server niet bereikbaar, apparaat offline, batterij kritiek/laag, firmware-update, nieuw/verwijderd apparaat; hoofdschakelaar en schakelaar per meldingstype in de kaart (Server → Notification Center) en in het dialoogvenster Configureren, gesorteerd op urgentie. Opgelost: tijdens het typen in invoervelden van de kaart (bijv. “e” in het naamveld) worden de sneltoetsen van Home Assistant, zoals het zoeken naar entiteiten, niet meer geactiveerd. Gewijzigd: de apparaatregistry wordt opgevraagd zonder `device_registry.devices`, dat vanaf Home Assistant 2027.9 vervalt. Alleen getest met gesimuleerde gegevens, niet met een echt Notification Center en niet op echte hardware |
 | **1.0.3** | Nieuw: kleine apparaatafbeeldingen (kandidaten uit de Zigbee2MQTT-afbeeldingenbibliotheek, uitschakelbaar, eigen afbeeldingenmap mogelijk), categorie **Functies** met schakelbare aan/uit-schakelaars en meetwaarden, in de apparaatpopup de secties Functies en Entiteiten met kopiëren naar het klembord. Nieuwe sleutels `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Alleen met gesimuleerde gegevens en in een headless browser getest, niet op echte hardware |
 | **1.0.2** | Resourcepad van de kaart gecorrigeerd: `/matter_manager/matter-manager-card.js` in plaats van `/matter_manager_files/…` (bestaande items worden automatisch omgezet). Fabrikant en apparaatnaam worden uit de typeaanduiding gelezen. Nieuw: filters en groeperen (fabrikant, apparaatnaam, apparaatklasse) zoals in de Zigbee2MQTT Manager. Frans (pull request #1) |

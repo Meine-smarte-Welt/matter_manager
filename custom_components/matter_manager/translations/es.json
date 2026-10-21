@@ -1,0 +1,129 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Matter Manager",
+        "description": "Conecta el gestor con tu Matter Server (python-matter-server). La dirección se toma de la integración Matter cuando es posible.",
+        "data": {
+          "url": "Dirección del Matter Server",
+          "low_battery_threshold": "Umbral de “batería baja” (%)"
+        },
+        "data_description": {
+          "url": "Dirección WebSocket, p. ej. ws://core-matter-server:5580/ws (complemento Matter Server) o ws://192.168.1.10:5580/ws."
+        }
+      },
+      "reconfigure": {
+        "title": "Cambiar la dirección del Matter Server",
+        "data": {
+          "url": "Dirección del Matter Server"
+        },
+        "data_description": {
+          "url": "Dirección WebSocket, p. ej. ws://core-matter-server:5580/ws."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Dirección no válida (se espera ws://… o wss://…).",
+      "cannot_connect": "No se puede conectar con el Matter Server. ¿Está en funcionamiento y es correcta la dirección?",
+      "not_matter_server": "La dirección responde, pero no como un Matter Server."
+    },
+    "abort": {
+      "already_configured": "Ya existe una entrada para esta dirección.",
+      "reconfigure_successful": "La dirección se ha cambiado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matter Manager – Ajustes",
+        "description": "Versión instalada: **{version}**\n\n{update_info}",
+        "data": {
+          "low_battery_threshold": "Umbral de “batería baja” (%)",
+          "critical_battery_threshold": "Umbral de “batería crítica” (%)",
+          "fire_events": "Activar eventos de Home Assistant",
+          "sidebar_enabled": "Mostrar la entrada en la barra lateral",
+          "sidebar_title": "Nombre en la barra lateral",
+          "nc_enabled": "Enviar mensajes al Notification Center",
+          "nc_types": "Tipos de mensajes que se envían"
+        },
+        "data_description": {
+          "critical_battery_threshold": "Debe ser menor o igual que el umbral de “batería baja”.",
+          "fire_events": "Activa p. ej. matter_manager_device_offline, _battery_low y _update_available; utilizable como disparador de automatizaciones.",
+          "sidebar_enabled": "Muestra Matter Manager como entrada propia en la barra lateral de Home Assistant.",
+          "sidebar_title": "Texto libre, 40 caracteres como máximo. Por defecto: Matter Manager. Con varias entradas puedes darle a cada una un nombre claro.",
+          "nc_enabled": "Solo tiene efecto si el Notification Center está instalado. Sin él, no ocurre nada.",
+          "nc_types": "Ordenados por urgencia. Los tipos desmarcados no se envían."
+        }
+      }
+    },
+    "error": {
+      "critical_above_low": "El umbral crítico no debe superar el umbral de “bajo”.",
+      "sidebar_title_too_long": "El nombre no puede tener más de 40 caracteres."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices": {
+        "name": "Dispositivos"
+      },
+      "offline": {
+        "name": "Dispositivos sin conexión"
+      },
+      "low_battery": {
+        "name": "Dispositivos con batería baja"
+      },
+      "critical_battery": {
+        "name": "Dispositivos con batería crítica"
+      },
+      "updates_available": {
+        "name": "Actualizaciones de firmware disponibles"
+      },
+      "fabrics": {
+        "name": "Fabrics"
+      }
+    }
+  },
+  "services": {
+    "commission": {
+      "name": "Añadir dispositivo",
+      "description": "Pone en servicio un dispositivo Matter con su código de configuración (emparejamiento).",
+      "fields": {
+        "entry_id": {
+          "name": "ID de la entrada",
+          "description": "Solo necesario con varias instancias."
+        },
+        "code": {
+          "name": "Código de configuración",
+          "description": "Texto del QR (MT:…) o código numérico (11 o 21 dígitos)."
+        },
+        "network_only": {
+          "name": "Solo red",
+          "description": "Buscar solo a través de la red existente, no por Bluetooth."
+        }
+      }
+    },
+    "check_updates": {
+      "name": "Buscar actualizaciones de firmware",
+      "description": "Comprueba en segundo plano si hay actualizaciones para todos los dispositivos compatibles con OTA.",
+      "fields": {
+        "entry_id": {
+          "name": "ID de la entrada",
+          "description": "Solo necesario con varias instancias."
+        }
+      }
+    }
+  },
+  "selector": {
+    "nc_types": {
+      "options": {
+        "server_offline": "Matter Server no accesible",
+        "battery_critical": "Batería crítica",
+        "device_offline": "Dispositivo sin conexión",
+        "battery_low": "Batería baja",
+        "update_available": "Actualización de firmware disponible",
+        "device_joined": "Nuevo dispositivo",
+        "device_left": "Dispositivo eliminado"
+      }
+    }
+  }
+}

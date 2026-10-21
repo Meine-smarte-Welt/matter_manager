@@ -1,12 +1,14 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 161f6212790d64437c66b76d59b6dd4ea7221df04eba38998f52a36d480227c8
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): a2674a74e76b3b147dc65f2e0b5ad0cfb32f628cd1438aafffda2c63daf7ecfd
 """Konstanten für Matter Manager."""
 
 from datetime import timedelta
 
 DOMAIN = "matter_manager"
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 CONF_URL = "url"
+CONF_SIDEBAR_ENABLED = "sidebar_enabled"
+CONF_SIDEBAR_TITLE = "sidebar_title"
 CONF_LOW_BATTERY = "low_battery_threshold"
 CONF_CRITICAL_BATTERY = "critical_battery_threshold"
 CONF_FIRE_EVENTS = "fire_events"
@@ -16,6 +18,13 @@ DEFAULT_URL = "ws://core-matter-server:5580/ws"
 DEFAULT_LOW_BATTERY = 20
 DEFAULT_CRITICAL_BATTERY = 10
 DEFAULT_FIRE_EVENTS = True
+
+# Eintrag in der Seitenleiste (je Integrationseintrag, Name frei wählbar)
+DEFAULT_SIDEBAR_ENABLED = True
+DEFAULT_SIDEBAR_TITLE = "Matter Manager"
+SIDEBAR_TITLE_MAX = 40
+SIDEBAR_ICON = "mdi:matter"
+PANEL_ELEMENT = "matter-manager-panel"
 
 # Statische Auslieferung der Lovelace-Karte (Ordner "www")
 CARD_URL_BASE = "/matter_manager"

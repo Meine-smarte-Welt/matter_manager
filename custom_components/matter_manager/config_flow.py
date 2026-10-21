@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 83a8168b30f530bab8c58e24f8751e5d026b58b602e3343ad1d7190d231055be
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): a5ac3324052912cc7188be8df23eb4870552871a7b51caa76c2f3fdc2f3d4c92
 """Config Flow für Matter Manager."""
 
 from __future__ import annotations
@@ -26,12 +26,17 @@ from .const import (
     CONF_CRITICAL_BATTERY,
     CONF_FIRE_EVENTS,
     CONF_LOW_BATTERY,
+    CONF_SIDEBAR_ENABLED,
+    CONF_SIDEBAR_TITLE,
     CONF_URL,
     DEFAULT_CRITICAL_BATTERY,
     DEFAULT_FIRE_EVENTS,
     DEFAULT_LOW_BATTERY,
+    DEFAULT_SIDEBAR_ENABLED,
+    DEFAULT_SIDEBAR_TITLE,
     DEFAULT_URL,
     DOMAIN,
+    SIDEBAR_TITLE_MAX,
     VERSION,
 )
 from .matter_client import MatterConnectionError, MatterServerError, async_probe
@@ -175,12 +180,16 @@ class MatterManagerOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
+            sidebar_title = str(user_input.get(CONF_SIDEBAR_TITLE) or "").strip()
             if user_input[CONF_CRITICAL_BATTERY] > user_input[CONF_LOW_BATTERY]:
                 errors[CONF_CRITICAL_BATTERY] = "critical_above_low"
-            else:
+            if len(sidebar_title) > SIDEBAR_TITLE_MAX:
+                errors[CONF_SIDEBAR_TITLE] = "sidebar_title_too_long"
+            if not errors:
                 chosen = set(user_input.get(OPT_TYPES) or [])
                 data = {
                     **user_input,
+                    CONF_SIDEBAR_TITLE: sidebar_title or DEFAULT_SIDEBAR_TITLE,
                     OPT_TYPES: {t: t in chosen for t in NC_TYPE_KEYS},
                 }
                 return self.async_create_entry(data=data)
@@ -227,6 +236,14 @@ class MatterManagerOptionsFlow(OptionsFlow):
                         CONF_FIRE_EVENTS,
                         default=opts.get(CONF_FIRE_EVENTS, DEFAULT_FIRE_EVENTS),
                     ): bool,
+                    vol.Required(
+                        CONF_SIDEBAR_ENABLED,
+                        default=opts.get(CONF_SIDEBAR_ENABLED, DEFAULT_SIDEBAR_ENABLED),
+                    ): bool,
+                    vol.Required(
+                        CONF_SIDEBAR_TITLE,
+                        default=opts.get(CONF_SIDEBAR_TITLE) or DEFAULT_SIDEBAR_TITLE,
+                    ): str,
                     vol.Required(
                         OPT_ENABLED, default=opts.get(OPT_ENABLED, True)
                     ): bool,

@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): cccfaae6f66ce1f6051a5467ee488e0b1aea4ef33de1a9f66030fac873cc10fb
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): a75e74d06d4f774d909810d808ab6fb007fd33cef3ad44d98e62669e6209b15c
 """Matter Manager – Verwaltung der Matter-Geräte direkt in Home Assistant."""
 
 from __future__ import annotations
@@ -20,10 +20,18 @@ from homeassistant.loader import async_get_integration
 from .const import (
     CARD_FILENAME,
     CARD_URL_BASE,
+    CONF_SIDEBAR_ENABLED,
+    CONF_SIDEBAR_TITLE,
+    DEFAULT_SIDEBAR_ENABLED,
+    DEFAULT_SIDEBAR_TITLE,
     DOMAIN,
     LEGACY_CARD_URL_BASE,
+    PANEL_ELEMENT,
     SERVICE_CHECK_UPDATES,
     SERVICE_COMMISSION,
+    SIDEBAR_ICON,
+    SIDEBAR_TITLE_MAX,
+    VERSION,
 )
 from .manager import MatterConfigEntry, MatterManager
 from .websocket_api import async_register_websocket_api
@@ -140,6 +148,56 @@ async def _async_ensure_lovelace_resource(hass: HomeAssistant) -> None:
         )
 
 
+# --- Eintrag in der Seitenleiste ----------------------------------------------
+#
+# Jeder Integrationseintrag bekommt (wenn eingeschaltet) einen eigenen Seitenleisten-Eintrag
+# mit frei wählbarem Namen. Das Panel lädt dieselbe JavaScript-Datei wie die Karte (gleiche
+# URL wie die Lovelace-Ressource, damit sie nur einmal ausgewertet wird).
+def sidebar_title_for(entry: MatterConfigEntry) -> str:
+    """Gewählter Name für die Seitenleiste, sonst der Standardname."""
+    raw = entry.options.get(CONF_SIDEBAR_TITLE)
+    title = raw.strip() if isinstance(raw, str) else ""
+    return title[:SIDEBAR_TITLE_MAX] or DEFAULT_SIDEBAR_TITLE
+
+
+def _panel_path(entry: MatterConfigEntry) -> str:
+    """Stabile Adresse je Eintrag (Teil der Eintrags-ID, nur Kleinbuchstaben und Ziffern)."""
+    short = "".join(c for c in entry.entry_id.lower() if c.isalnum())[-8:]
+    return f"matter-manager-{short}"
+
+
+def _async_remove_panel(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+    from homeassistant.components import frontend
+
+    try:
+        frontend.async_remove_panel(hass, _panel_path(entry), warn_if_unknown=False)
+    except Exception as err:  # noqa: BLE001 - darf Entladen/Neuladen nie verhindern
+        _LOGGER.debug("Seitenleisten-Eintrag nicht entfernbar: %s", err)
+
+
+async def _async_register_panel(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+    """Seitenleisten-Eintrag anlegen (oder entfernen, wenn ausgeschaltet)."""
+    _async_remove_panel(hass, entry)
+    if not entry.options.get(CONF_SIDEBAR_ENABLED, DEFAULT_SIDEBAR_ENABLED):
+        return
+    try:
+        from homeassistant.components import panel_custom
+
+        await panel_custom.async_register_panel(
+            hass,
+            frontend_url_path=_panel_path(entry),
+            webcomponent_name=PANEL_ELEMENT,
+            sidebar_title=sidebar_title_for(entry),
+            sidebar_icon=SIDEBAR_ICON,
+            module_url=f"{_CARD_STATIC_URL}?v={VERSION}",
+            embed_iframe=False,
+            require_admin=False,
+            config={"entry_id": entry.entry_id},
+        )
+    except Exception as err:  # noqa: BLE001 - darf das Setup nie verhindern
+        _LOGGER.warning("Seitenleisten-Eintrag konnte nicht angelegt werden: %s", err)
+
+
 # --- Services ---------------------------------------------------------------
 def _manager_for(hass: HomeAssistant, call: ServiceCall) -> MatterManager:
     entry_id = call.data.get("entry_id")
@@ -195,6 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     entry.runtime_data = manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await _async_register_panel(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
@@ -202,6 +261,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
+        _async_remove_panel(hass, entry)
         await entry.runtime_data.async_stop()
     return unloaded
 

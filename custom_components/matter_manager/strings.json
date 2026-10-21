@@ -41,19 +41,24 @@
           "low_battery_threshold": "Schwelle für „Batterie niedrig“ (%)",
           "critical_battery_threshold": "Schwelle für „Batterie kritisch“ (%)",
           "fire_events": "Home-Assistant-Ereignisse auslösen",
+          "sidebar_enabled": "Eintrag in der Seitenleiste anzeigen",
+          "sidebar_title": "Name in der Seitenleiste",
           "nc_enabled": "Meldungen an das Notification Center senden",
           "nc_types": "Gesendete Meldungsarten"
         },
         "data_description": {
           "critical_battery_threshold": "Muss kleiner oder gleich der Schwelle für „Batterie niedrig“ sein.",
           "fire_events": "Löst z. B. matter_manager_device_offline, _battery_low und _update_available aus – nutzbar als Automations-Auslöser.",
+          "sidebar_enabled": "Zeigt den Matter Manager als eigenen Eintrag in der Seitenleiste von Home Assistant.",
+          "sidebar_title": "Frei wählbar, höchstens 40 Zeichen. Standard: Matter Manager. Bei mehreren Einträgen kannst du so jeden eindeutig benennen.",
           "nc_enabled": "Wirkt nur, wenn das Notification Center installiert ist. Ohne es passiert nichts.",
           "nc_types": "Nach Dringlichkeit sortiert. Abgewählte Arten werden nicht gesendet."
         }
       }
     },
     "error": {
-      "critical_above_low": "Die kritische Schwelle darf nicht über der Schwelle für „niedrig“ liegen."
+      "critical_above_low": "Die kritische Schwelle darf nicht über der Schwelle für „niedrig“ liegen.",
+      "sidebar_title_too_long": "Der Name darf höchstens 40 Zeichen lang sein."
     }
   },
   "entity": {

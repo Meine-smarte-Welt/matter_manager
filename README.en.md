@@ -1,8 +1,23 @@
-[🇩🇪 Deutsch](README.md) · 🇬🇧 English · [🇳🇱 Nederlands](README.nl.md) · [🇫🇷 Français](README.fr.md)
+<h2 align="center"><a href="README.md">🇩🇪 Deutsch</a>&nbsp;&nbsp;·&nbsp;&nbsp;🇬🇧 <b>[ English ]</b>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.nl.md">🇳🇱 Nederlands</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.fr.md">🇫🇷 Français</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.es.md">🇪🇸 Español</a></h2>
+
+<p align="center"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/matter-manager-banner.webp" alt="Matter Manager" width="420"></p>
 
 # Matter Manager for Home Assistant
 
 Manage Matter devices without leaving Home Assistant: devices, batteries, firmware updates, fabrics (multi-admin), bindings and the Matter Server in one dashboard card – as a HACS integration. Structure and design follow the [Zigbee2MQTT Manager](https://github.com/Meine-smarte-Welt/zigbee2mqtt_manager): icon categories, row lists, detail popup, accordion sections, graphical editor and freely adjustable colors.
+
+📖 **Detailed article with guide and background (in German):** [Matter Manager for Home Assistant on Meine smarte Welt](https://meinesmartewelt.de/matter-manager-home-assistant/)
+
+## Screenshots
+
+<table>
+<tr>
+<td align="center" valign="top"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/screenshot-geraeteuebersicht.webp" alt="Device overview with statistic chips, search, sorting and filters" width="340"><br><sub>Device overview with statistic chips, search, sorting and filters</sub></td>
+<td align="center" valign="top"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/screenshot-karten-editor.webp" alt="Card editor with version block and categories" width="340"><br><sub>Card editor with version block and categories</sub></td>
+</tr>
+</table>
+
+<sub>The screenshots are from version 1.0.3.</sub>
 
 ## Contents
 
@@ -42,6 +57,7 @@ The card has seven categories in an icon bar (icons only below roughly 480 px ca
 More points:
 
 - **Matter equivalents instead of Zigbee terms:** availability comes from the Matter Server, signal strength is an RSSI value in dBm (Wi-Fi or Thread), groups are replaced by fabrics, the “coordinator” is the Matter Server.
+- **Own sidebar entry (new in 1.1.1):** Matter Manager appears as its own entry in the Home Assistant sidebar. The name is freely selectable (default “Matter Manager”) and is changed in the **Configure** dialog; with several entries you can name each one individually. The entry can also be hidden.
 - **Devices behind bridges** (e.g. a Hue bridge) appear on their own; renaming and toggling functions are possible, firmware, bindings and fabrics stay locked.
 - **Device images:** A small device image appears next to each row and in the popup. Matter provides no product images, so the card tries image names built from part number, product name and model one after another against the image library of the Zigbee2MQTT project (`https://www.zigbee2mqtt.io/images/devices/<model>.png`). If everything fails, the icon by device type is shown. **Privacy:** your browser (not Home Assistant) requests images from `zigbee2mqtt.io` and thereby transmits the devices' part number or product name. With `show_images: false` nothing is requested; `image_base` points to your own server (e.g. `/local/devices`), `device_images` assigns custom image URLs to individual devices (YAML only).
 - **Functions and clipboard:** Switches are only toggled via the Matter commands "On"/"Off" of the OnOff cluster. Locks deliberately cannot be operated. In the popup, the button per entity (or "Copy all") copies the entity ID to the clipboard; if access is blocked (e.g. without HTTPS), a text field for manual copying appears.
@@ -50,7 +66,7 @@ More points:
 - **Two-click confirmation** instead of a browser dialog for risky actions (remove, update, reconnect, unbind).
 - **Read only:** `read_only: true` hides all controls that change something (wall tablets).
 - **Zoom:** `zoom` scales the whole card.
-- **Languages:** German, English, Dutch and French (integration and card, following the Home Assistant language).
+- **Languages:** German, English, Dutch, French and Spanish (integration and card, following the Home Assistant language).
 - **Diagnostics download** with anonymized names and IDs.
 
 ## Requirements
@@ -199,20 +215,21 @@ If the card and integration versions differ (stale browser cache), this is also 
 
 ## Integration settings
 
-Under **Configure** (showing the installed version): “low battery” threshold, “critical battery” threshold (must be less than or equal) and events on/off. **Reconfigure** lets you change the Matter Server address.
+Under **Configure** (showing the installed version): “low battery” threshold, “critical battery” threshold (must be less than or equal) and events on/off, plus **Show entry in the sidebar** and **Name in the sidebar** (up to 40 characters, default “Matter Manager”). **Reconfigure** lets you change the Matter Server address.
 
 The dialog also contains **Send messages to the Notification Center** (main switch) and **Message types to send** (see [Notification Center](#notification-center-optional)). Changes to these two switches are applied without reloading the integration.
 
 ## Security
 
-All write actions (rename, comments, remove, toggling functions, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name and comment length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes. Switching is limited to on/off of the OnOff cluster, the value must be a boolean and the device must be reachable; locks and all other functions are read-only. Image addresses from `device_images` and `image_base` are checked against unsafe schemes (e.g. `javascript:`).
+All write actions (rename, comments, remove, toggling functions, firmware, bindings, fabrics, add device, reconnect, version check) and loading of the device details are restricted to **administrators** via WebSocket. Input is validated by the backend (setup code format, name and comment length, known devices, own fabric cannot be removed). When a binding is created, an access entry (ACL) is only added on the target device if an administrator entry via CASE already exists there, so Home Assistant never loses access. The card escapes all texts; color values pass an allowlist. The setup code shown for an open pairing window is visible to administrators only and valid for five minutes. Switching is limited to on/off of the OnOff cluster, the value must be a boolean and the device must be reachable; locks and all other functions are read-only. Image addresses from `device_images` and `image_base` are checked against unsafe schemes (e.g. `javascript:`). The sidebar name is shown as text, never as HTML, and is limited to 40 characters.
 
 The Notification Center switches can only be changed over WebSocket by an **administrator**; the message type is checked against the list of known types. Messages contain only device names and values such as the battery level.
 
 ## Known limitations
 
-- **Version 1.1.0 has only been tested with simulated data and a simulated Matter server, not on real hardware.** It was developed against the documented WebSocket interface of python-matter-server.
-- **Notification Center:** The connection was only tested against a simulated event bus, not against a real Notification Center. The card and the integration dialog are translated into German, English, Dutch and French; for Spanish the integration only supplies the message texts to the Notification Center, the card then shows English.
+- **Version 1.1.1 has only been tested with simulated data and a simulated Matter server, not on real hardware.** It was developed against the documented WebSocket interface of python-matter-server.
+- **Notification Center:** The connection was only tested against a simulated event bus, not against a real Notification Center.
+- **Sidebar and search field:** The behavior of the search field (focus is kept while typing, no Home Assistant shortcuts) was checked in a headless Chromium, not on a phone and not in the Home Assistant app. The sidebar entry was not tested on a real Home Assistant.
 - **Manufacturer and device name** come from the device's basic data (vendor name and product name). If the product name starts with the manufacturer name, it is removed; if the manufacturer is missing, it is only detected when another device reports the same manufacturer name. Without these values the device appears under “Unknown”. The device class comes from the endpoints' device types; devices with an unknown type land in “Other”. Both were only checked with simulated data.
 - **Writing Matter commands are untested:** the format of `set_acl_entry`/`set_node_binding` (bindings), `commission_with_code`, `open_commissioning_window` and `remove_matter_fabric` may differ depending on the Matter Server version. In that case the function has no effect or reports an error – read-only functions are not affected.
 - **No groups:** Zigbee groups have no direct Matter equivalent for this interface; the category is called “Fabrics” instead.
@@ -231,12 +248,14 @@ The Notification Center switches can only be changed over WebSocket by an **admi
 - **“Matter Server version too old”:** update the Matter Server (API schema 8 or newer).
 - **No signal value:** only Wi-Fi and Thread devices report it; some devices do not provide it.
 - **“No connection to the integration”:** is the integration loaded? Is `entry_id` correct?
+- **Two identical-looking entries in the sidebar:** with several Matter Manager entries, give each a different name under **Configure → Name in the sidebar**.
 - Logs: set `custom_components.matter_manager` to `debug`.
 
 ## Version history
 
 | Version | Change |
 |---|---|
+| **1.1.1** | New: **own sidebar entry** with a freely selectable name (default “Matter Manager”, up to 40 characters, can be disabled) in the Configure dialog; with several entries you no longer get two identical-looking entries. **Spanish** (integration, card, README). README with flags, screenshots and a link to the blog post. Fixed: in the search field of the device overview the card no longer replaces the input while typing – on a phone the keyboard no longer closes after every letter, on desktop the field keeps its focus; as a result the next letter no longer ends up in the Home Assistant shortcuts (“e” = entities). Only tested with simulated data and in a headless browser, not on real hardware |
 | **1.1.0** | New: **comments** in the device popup (editable, searchable, changeable by administrators only); optional connection to the **Notification Center** (interface “schema 1” over the event bus): message types server unreachable, device offline, battery critical/low, firmware update, new/removed device; main switch and a switch per message type in the card (Server → Notification Center) and in the Configure dialog, sorted by urgency. Fixed: typing in the card’s input fields (e.g. “e” in the name field) no longer triggers Home Assistant keyboard shortcuts such as the entity search. Changed: the device registry is queried without `device_registry.devices`, which is removed in Home Assistant 2027.9. Tested only with simulated data, not against a real Notification Center and not on real hardware |
 | **1.0.3** | New: small device images (candidates from the Zigbee2MQTT image library, can be disabled, own image folder possible), category **Functions** with switchable on/off switches and measured values, device popup sections Functions and Entities with copy to clipboard. New keys `show_functions`, `show_images`, `image_base`, `device_images`, `color_icon_functions`. Tested only with simulated data and in a headless browser, not on real hardware |
 | **1.0.2** | Card resource path corrected: `/matter_manager/matter-manager-card.js` instead of `/matter_manager_files/…` (existing entries are migrated automatically). Manufacturer and device name are read from the type designation. New: filters and grouping (manufacturer, device name, device class) as in the Zigbee2MQTT Manager. French (pull request #1) |
