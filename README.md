@@ -1,5 +1,9 @@
 <h2 align="center">🇩🇪 <b>[ Deutsch ]</b>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.en.md">🇬🇧 English</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.nl.md">🇳🇱 Nederlands</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.fr.md">🇫🇷 Français</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.es.md">🇪🇸 Español</a></h2>
 
+<p>
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Meine-smarte-Welt&amp;repository=matter_manager&amp;category=integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Repository in Home Assistant öffnen" height="32"></a>
+</p>
+
 <p align="center"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/matter-manager-banner.webp" alt="Matter Manager" width="420"></p>
 
 # Matter Manager für Home Assistant
