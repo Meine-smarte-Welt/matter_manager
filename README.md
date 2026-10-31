@@ -1,15 +1,15 @@
 <h2 align="center">🇩🇪 <b>[ Deutsch ]</b>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.en.md">🇬🇧 English</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.nl.md">🇳🇱 Nederlands</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.fr.md">🇫🇷 Français</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.es.md">🇪🇸 Español</a></h2>
 
-<p>
-  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Meine-smarte-Welt&amp;repository=matter_manager&amp;category=integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Repository in Home Assistant öffnen" height="32"></a>
-</p>
+
 
 <p align="center"><img src="https://raw.githubusercontent.com/Meine-smarte-Welt/matter_manager/main/docs/images/matter-manager-banner.webp" alt="Matter Manager" width="420"></p>
 
 # Matter Manager für Home Assistant
 
 Matter-Geräte verwalten, ohne Home Assistant zu verlassen: Geräte, Batterien, Firmware-Updates, Fabrics (Multi-Admin), Bindings und Matter Server in einer Dashboard-Karte – als HACS-Integration. Aufbau und Design entsprechen dem [Zigbee2MQTT Manager](https://github.com/Meine-smarte-Welt/zigbee2mqtt_manager): Symbol-Kategorien, Zeilenlisten, Detail-Popup, Akkordeon-Abschnitte, grafischer Editor und frei einstellbare Farben.
-
+<p>
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Meine-smarte-Welt&amp;repository=matter_manager&amp;category=integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Repository in Home Assistant öffnen" height="32"></a>
+</p>
 📖 **Ausführlicher Beitrag mit Anleitung und Hintergründen:** [Matter Manager für Home Assistant auf Meine smarte Welt](https://meinesmartewelt.de/matter-manager-home-assistant/)
 
 ## Screenshots
