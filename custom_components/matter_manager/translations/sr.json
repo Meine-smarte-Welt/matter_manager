@@ -1,0 +1,129 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Matter Manager",
+        "description": "Повезује управљач са вашим Matter сервером (python-matter-server). Адреса се преузима из Matter интеграције када је то могуће.",
+        "data": {
+          "url": "Адреса Matter сервера",
+          "low_battery_threshold": "Праг за „слабу батерију” (%)"
+        },
+        "data_description": {
+          "url": "WebSocket адреса, нпр. ws://core-matter-server:5580/ws (додатак за Matter сервер) или ws://192.168.1.10:5580/ws."
+        }
+      },
+      "reconfigure": {
+        "title": "Промена адресе Matter сервера",
+        "data": {
+          "url": "Адреса Matter сервера"
+        },
+        "data_description": {
+          "url": "WebSocket адреса, нпр. ws://core-matter-server:5580/ws."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Неисправна адреса (очекује се ws://… или wss://…).",
+      "cannot_connect": "Повезивање са Matter сервером није могуће. Да ли је покренут и да ли је адреса тачна?",
+      "not_matter_server": "Адреса одговара, али не као Matter сервер."
+    },
+    "abort": {
+      "already_configured": "Унос за ову адресу већ постоји.",
+      "reconfigure_successful": "Адреса је успешно промењена."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matter Manager – подешавања",
+        "description": "Инсталирана верзија: **{version}**\n\n{update_info}",
+        "data": {
+          "low_battery_threshold": "Праг за „слабу батерију” (%)",
+          "critical_battery_threshold": "Праг за „критичан ниво батерије” (%)",
+          "fire_events": "Окидај Home Assistant догађаје",
+          "sidebar_enabled": "Прикажи ставку у бочној траци",
+          "sidebar_title": "Назив ставке у бочној траци",
+          "nc_enabled": "Шаљи поруке у Центар за обавештења (Notification Center)",
+          "nc_types": "Типови порука за слање"
+        },
+        "data_description": {
+          "critical_battery_threshold": "Мора бити мањи од прага за „слабу батерију” или једнак њему.",
+          "fire_events": "Окида догађаје попут matter_manager_device_offline, _battery_low и _update_available – погодно за окидаче аутоматизација.",
+          "sidebar_enabled": "Приказује Matter Manager као засебну ставку у бочној траци Home Assistant-а.",
+          "sidebar_title": "Слободан текст, највише 40 знакова. Подразумевано: Matter Manager. Код више уноса можете јасно именовати сваки понаособ.",
+          "nc_enabled": "Има ефекта само ако је инсталиран Центар за обавештења (Notification Center). Без њега се ништа не дешава.",
+          "nc_types": "Сортирано према хитности. Одозначени типови се не шаљу."
+        }
+      }
+    },
+    "error": {
+      "critical_above_low": "Критични праг не сме прелазити праг за „слабу батерију”.",
+      "sidebar_title_too_long": "Назив не сме бити дужи од 40 знакова."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices": {
+        "name": "Уређаји"
+      },
+      "offline": {
+        "name": "Уређаји ван мреже"
+      },
+      "low_battery": {
+        "name": "Уређаји са слабом батеријом"
+      },
+      "critical_battery": {
+        "name": "Уређаји са критичном батеријом"
+      },
+      "updates_available": {
+        "name": "Доступна ажурирања фирмвера"
+      },
+      "fabrics": {
+        "name": "Мреже"
+      }
+    }
+  },
+  "services": {
+    "commission": {
+      "name": "Додај уређај",
+      "description": "Уводи Matter уређај у рад помоћу његовог кода за подешавање (упаривање).",
+      "fields": {
+        "entry_id": {
+          "name": "ИД уноса",
+          "description": "Потребно само код више инстанци."
+        },
+        "code": {
+          "name": "Код за подешавање",
+          "description": "QR текст (MT:…) или нумерички код (11 или 21 цифра)."
+        },
+        "network_only": {
+          "name": "Само мрежа",
+          "description": "Претражуј само постојећу мрежу, не преко Bluetooth-а."
+        }
+      }
+    },
+    "check_updates": {
+      "name": "Провери ажурирања фирмвера",
+      "description": "У позадини проверава ажурирања за све уређаје који подржавају OTA.",
+      "fields": {
+        "entry_id": {
+          "name": "ИД уноса",
+          "description": "Потребно само код више инстанци."
+        }
+      }
+    }
+  },
+  "selector": {
+    "nc_types": {
+      "options": {
+        "server_offline": "Matter сервер је недоступан",
+        "battery_critical": "Критичан ниво батерије",
+        "device_offline": "Уређај је ван мреже",
+        "battery_low": "Слаба батерија",
+        "update_available": "Доступно ажурирање фирмвера",
+        "device_joined": "Нови уређај",
+        "device_left": "Уређај је уклоњен"
+      }
+    }
+  }
+}

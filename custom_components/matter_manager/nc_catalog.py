@@ -1,7 +1,7 @@
 # SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): aa8b08c57c534e89a7915acaca99bc42ff330b338768bba1868f75579212e6b7
 """Katalog der Meldungsarten für das optionale Notification Center (Schema 1).
 
-Die Texte stehen hier in allen fünf Sprachen (de, en, nl, fr, es). Das
+Die Texte stehen hier in allen fünf Sprachen (de, en, nl, fr, es, sr-Latn, sr). Das
 Notification Center wählt die Anzeigesprache; Platzhalter in {geschweiften
 Klammern} werden dort eingesetzt.
 """
@@ -46,6 +46,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "title": "Servidor Matter inaccesible",
                 "message": "El servidor Matter no responde. Los dispositivos Matter no se pueden gestionar hasta que vuelva a estar accesible.",
             },
+            "sr-Latn": {
+                "label": "Kritičan nivo baterije",
+                "title": "{name}: kritičan nivo baterije",
+                "message": "Baterija uređaja {name} je na {battery}. Molimo vas da je uskoro zamenite.",
+            },
+            "sr": {
+                "label": "Критичан ниво батерије",
+                "title": "{name}: критичан ниво батерије",
+                "message": "Батерија уређаја {name} је на {battery}. Молимо вас да је ускоро замените.",
+            },            
         },
     },
     {
@@ -80,6 +90,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "title": "{name}: batería crítica",
                 "message": "La batería de {name} está en {battery}. Cámbiala pronto.",
             },
+            "sr-Latn": {
+                "label": "Kritičan nivo baterije",
+                "title": "{name}: kritičan nivo baterije",
+                "message": "Baterija uređaja {name} je na {battery}. Molimo vas da je uskoro zamenite.",
+            },
+            "sr": {
+                "label": "Критичан ниво батерије",
+                "title": "{name}: критичан ниво батерије",
+                "message": "Батерија уређаја {name} је на {battery}. Молимо вас да је ускоро замените.",
+            },            
         },
     },
     {
@@ -113,6 +133,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "label": "Dispositivo sin conexión",
                 "title": "{name} está sin conexión",
                 "message": "{name} no está accesible.",
+            },
+            "sr-Latn": {
+                "label": "Uređaj van mreže",
+                "title": "{name} je van mreže",
+                "message": "{name} nije dostupan.",
+            },
+            "sr": {
+                "label": "Уређај ван мреже",
+                "title": "{name} је ван мреже",
+                "message": "{name} није доступан.",
             },
         },
     },
@@ -148,6 +178,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "title": "{name}: batería baja",
                 "message": "La batería de {name} está en {battery}.",
             },
+            "sr-Latn": {
+                "label": "Slaba baterija",
+                "title": "{name}: slaba baterija",
+                "message": "Baterija uređaja {name} je na {battery}.",
+            },
+            "sr": {
+                "label": "Слаба батерија",
+                "title": "{name}: слаба батерија",
+                "message": "Батерија уређаја {name} је на {battery}.",
+            },            
         },
     },
     {
@@ -181,6 +221,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "label": "Actualización de firmware disponible",
                 "title": "Actualización para {name}",
                 "message": "Hay una actualización de firmware disponible para {name} (versión {latest}).",
+            },
+            "sr-Latn": {
+                "label": "Dostupno ažuriranje firmvera",
+                "title": "Ažuriranje za {name}",
+                "message": "Dostupno je ažuriranje firmvera za {name} (verzija {latest}).",
+            },
+            "sr": {
+                "label": "Доступно ажурирање фирмвера",
+                "title": "Ажурирање за {name}",
+                "message": "Доступно је ажурирање фирмвера за {name} (верзија {latest}).",
             },
         },
     },
@@ -216,6 +266,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "title": "Dispositivo nuevo: {name}",
                 "message": "{name} se ha añadido al servidor Matter.",
             },
+            "sr-Latn": {
+                "label": "Novi uređaj",
+                "title": "Novi uređaj: {name}",
+                "message": "{name} je dodat na Matter server.",
+            },
+            "sr": {
+                "label": "Нови уређај",
+                "title": "Нови уређај: {name}",
+                "message": "{name} је додат на Matter сервер.",
+            },
         },
     },
     {
@@ -250,6 +310,16 @@ NC_CATALOG: list[dict[str, Any]] = [
                 "title": "Dispositivo eliminado: {name}",
                 "message": "{name} se ha eliminado del servidor Matter.",
             },
+            "sr-Latn": {
+                "label": "Uređaj uklonjen",
+                "title": "Uređaj uklonjen: {name}",
+                "message": "{name} je uklonjen sa Matter servera.",
+            },
+            "sr": {
+                "label": "Уређај уклоњен",
+                "title": "Уређај уклоњен: {name}",
+                "message": "{name} је уклоњен са Matter сервера.",
+            },            
         },
     },
 ]
